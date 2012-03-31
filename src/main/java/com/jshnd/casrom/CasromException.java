@@ -2,6 +2,8 @@ package com.jshnd.casrom;
 
 public class CasromException extends RuntimeException {
 
+	private static final long serialVersionUID = -925919941477407922L;
+
 	public CasromException() {
 		super();
 	}
