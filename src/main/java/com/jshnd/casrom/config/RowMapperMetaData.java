@@ -1,9 +1,16 @@
 package com.jshnd.casrom.config;
 
+import java.util.Collections;
+import java.util.Set;
+
+import com.jshnd.casrom.ColumnGetter;
+
 public class RowMapperMetaData {
 
 	private Class<?> rowMapperClass;
 
+	private Set<ColumnGetter> columnGetters;
+	
 	public RowMapperMetaData(Class<?> rowMapperClass) {
 		super();
 		this.rowMapperClass = rowMapperClass;
@@ -15,6 +22,14 @@ public class RowMapperMetaData {
 
 	public void setRowMapperClass(Class<?> rowMapperClass) {
 		this.rowMapperClass = rowMapperClass;
+	}
+
+	public Set<ColumnGetter> getColumnGetters() {
+		return columnGetters;
+	}
+
+	public void setColumnGetters(Set<ColumnGetter> columnGetters) {
+		this.columnGetters = Collections.unmodifiableSet(columnGetters);
 	}
 	
 }

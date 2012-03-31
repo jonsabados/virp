@@ -14,6 +14,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.Sets;
+import com.jshnd.casrom.CasromContext;
 import com.jshnd.casrom.config.RowMapperMetaData;
 import com.jshnd.casrom.config.RowMapperMetaDataReader;
 import com.jshnd.casrom.config.RowMapperSource;
