@@ -16,7 +16,7 @@ public class ReflectionsRowMapperSource implements RowMapperSource {
 	public Collection<Class<?>> getRowMapperClasses() {
 		ConfigurationBuilder builder = new ConfigurationBuilder();
 		builder.setUrls(ClasspathHelper.forJavaClassPath());
-		builder.filterInputsBy(new FilterBuilder.Include(FilterBuilder.prefix(basePackage)));
+		builder.filterInputsBy(new FilterBuilder.Include(FilterBuilder.prefix(basePackage + ".")));
 		Reflections reflections = new Reflections(builder);
 		return reflections.getTypesAnnotatedWith(RowMapper.class);
 	}

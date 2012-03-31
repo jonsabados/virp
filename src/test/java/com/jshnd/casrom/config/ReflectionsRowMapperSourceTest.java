@@ -10,6 +10,7 @@ import org.junit.Test;
 
 import com.jshnd.casrom.config.dummyclasses.mapped.SomeClass;
 import com.jshnd.casrom.config.dummyclasses.mapped.SomeOtherClass;
+import com.jshnd.casrom.config.dummyclasses.mappedsubpackage.subpackage.MappedSubclass;
 
 public class ReflectionsRowMapperSourceTest {
 
@@ -24,9 +25,17 @@ public class ReflectionsRowMapperSourceTest {
 	public void testGetRowMapperClasses() {
 		testObj.setBasePackage("com.jshnd.casrom.config.dummyclasses.mapped");
 		Collection<Class<?>> classes = testObj.getRowMapperClasses();
-		assertEquals(2, classes.size());
+		assertEquals("More classes than expected" + classes, 2, classes.size());
 		assertTrue(classes.contains(SomeClass.class));
 		assertTrue(classes.contains(SomeOtherClass.class));
 	}
 
+	@Test
+	public void testGetRowMapperSubpackageClasses() {
+		testObj.setBasePackage("com.jshnd.casrom.config.dummyclasses.mappedsubpackage");
+		Collection<Class<?>> classes = testObj.getRowMapperClasses();
+		assertEquals(1, classes.size());
+		assertTrue(classes.contains(MappedSubclass.class));
+	}
+	
 }
