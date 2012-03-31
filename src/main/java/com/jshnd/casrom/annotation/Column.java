@@ -9,6 +9,6 @@ import java.lang.annotation.Target;
 @Target({ElementType.FIELD, ElementType.METHOD})
 public @interface Column {
 	
-	String value();
+	String name();
 	
 }

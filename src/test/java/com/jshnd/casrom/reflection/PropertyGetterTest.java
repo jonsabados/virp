@@ -6,7 +6,6 @@ import java.lang.reflect.Field;
 
 import org.junit.Test;
 
-import com.jshnd.casrom.annotation.SomeBean;
 
 public class PropertyGetterTest {
 

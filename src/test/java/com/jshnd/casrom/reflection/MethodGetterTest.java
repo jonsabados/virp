@@ -6,7 +6,6 @@ import java.lang.reflect.Method;
 
 import org.junit.Test;
 
-import com.jshnd.casrom.annotation.SomeBean;
 import com.jshnd.casrom.reflection.MethodGetter;
 
 public class MethodGetterTest {
