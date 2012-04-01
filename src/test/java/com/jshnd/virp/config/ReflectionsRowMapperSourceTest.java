@@ -24,7 +24,7 @@ public class ReflectionsRowMapperSourceTest {
 	
 	@Test
 	public void testGetRowMapperClasses() {
-		testObj.setBasePackage("com.jshnd.casrom.config.dummyclasses.mapped");
+		testObj.setBasePackage("com.jshnd.virp.config.dummyclasses.mapped");
 		Collection<Class<?>> classes = testObj.getRowMapperClasses();
 		assertEquals("More classes than expected" + classes, 2, classes.size());
 		assertTrue(classes.contains(SomeClass.class));
@@ -33,7 +33,7 @@ public class ReflectionsRowMapperSourceTest {
 
 	@Test
 	public void testGetRowMapperSubpackageClasses() {
-		testObj.setBasePackage("com.jshnd.casrom.config.dummyclasses.mappedsubpackage");
+		testObj.setBasePackage("com.jshnd.virp.config.dummyclasses.mappedsubpackage");
 		Collection<Class<?>> classes = testObj.getRowMapperClasses();
 		assertEquals(1, classes.size());
 		assertTrue(classes.contains(MappedSubclass.class));
