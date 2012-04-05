@@ -5,7 +5,10 @@ import static org.junit.Assert.assertNotNull;
 
 import java.util.Set;
 
+import com.jshnd.virp.annotation.Column;
+import com.jshnd.virp.annotation.KeyColumn;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import com.google.common.collect.Iterables;
@@ -13,16 +16,92 @@ import com.jshnd.virp.ColumnGetter;
 import com.jshnd.virp.config.AnnotationDrivenRowMapperMetaDataReader;
 import com.jshnd.virp.config.RowMapperMetaData;
 import com.jshnd.virp.reflection.SomeBean;
+import org.junit.rules.ExpectedException;
 
 public class AnnotationDrivenRowMapperMetaDataReaderTest {
 
 	private AnnotationDrivenRowMapperMetaDataReader testObj;
-	
+
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
+
+    private static class OkPropertyKeyTester {
+
+        @KeyColumn
+        @Column(name = "foo")
+        private String key;
+
+    }
+
+    private static class OkMethodKeyTester {
+
+        private String key;
+
+        @KeyColumn
+        @Column(name = "foo")
+        @SuppressWarnings("unused")  // used via reflection
+        public String getKey() {
+            return key;
+        }
+
+        public void setKey(String key) {
+            this.key = key;
+        }
+    }
+
+    private static class BadKeyTester {
+
+        @KeyColumn
+        private String wrench;
+
+        private String key;
+
+        @KeyColumn
+        @SuppressWarnings("unused")  // used via reflection
+        public String getKey() {
+            return key;
+        }
+
+        public void setKey(String key) {
+            this.key = key;
+        }
+    }
+
 	@Before
 	public void setup() {
 		testObj = new AnnotationDrivenRowMapperMetaDataReader();
 	}
-	
+
+    @Test
+    public void testDuplicateKeyColumn() {
+
+    }
+
+    @Test
+    public void testPropertyKeyKeyColumn() {
+        RowMapperMetaData meta = testObj.readClass(OkPropertyKeyTester.class);
+        assertNotNull(meta.getKeyColumnGetter());
+        OkPropertyKeyTester bean = new OkPropertyKeyTester();
+        bean.key = "fooBar";
+        assertEquals("fooBar", meta.getKeyColumnGetter().getColumnValue(bean));
+        assertEquals(1, meta.getColumnGetters().size());
+        ColumnGetter getter = Iterables.getFirst(meta.getColumnGetters(), null);
+        assertEquals("foo", getter.getColumnName());
+        assertEquals("fooBar", getter.getColumnValue(bean));
+    }
+
+    @Test
+    public void testMethodKeyKeyColumn() {
+        RowMapperMetaData meta = testObj.readClass(OkMethodKeyTester.class);
+        assertNotNull(meta.getKeyColumnGetter());
+        OkMethodKeyTester bean = new OkMethodKeyTester();
+        bean.setKey("fooBar");
+        assertEquals("fooBar", meta.getKeyColumnGetter().getColumnValue(bean));
+        ColumnGetter getter = Iterables.getFirst(meta.getColumnGetters(), null);
+        assertEquals("foo", getter.getColumnName());
+        assertEquals("fooBar", getter.getColumnValue(bean));
+    }
+
 	@Test
 	public void testReadClassMethodsOnly() {
 		testObj.setReadProperties(false);

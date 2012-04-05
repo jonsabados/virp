@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import me.prettyprint.hector.api.Keyspace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,15 +13,17 @@ import com.jshnd.virp.config.RowMapperMetaData;
 import com.jshnd.virp.config.RowMapperMetaDataReader;
 import com.jshnd.virp.config.RowMapperSource;
 
-public class VirpContext {
+public class VirpSession {
 
-	private static final Logger log = LoggerFactory.getLogger(VirpContext.class);
+	private static final Logger log = LoggerFactory.getLogger(VirpSession.class);
 	
 	private RowMapperSource rowMapperSource;
 
 	private RowMapperMetaDataReader metaDataReader;
 	
 	private Map<Class<?>, RowMapperMetaData> configuredClasses;
+
+    private Keyspace keyspace;
 	
 	public void init() {
 		Map<Class<?>, RowMapperMetaData> workingMap = new HashMap<Class<?>, RowMapperMetaData>();

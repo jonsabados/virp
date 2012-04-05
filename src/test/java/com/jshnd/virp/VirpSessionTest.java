@@ -14,16 +14,15 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.Sets;
-import com.jshnd.virp.VirpContext;
 import com.jshnd.virp.config.RowMapperMetaData;
 import com.jshnd.virp.config.RowMapperMetaDataReader;
 import com.jshnd.virp.config.RowMapperSource;
 import com.jshnd.virp.config.dummyclasses.mapped.SomeClass;
 import com.jshnd.virp.config.dummyclasses.mappedsubpackage.subpackage.MappedSubclass;
 
-public class VirpContextTest {
+public class VirpSessionTest {
 
-	private VirpContext testObj;
+	private VirpSession testObj;
 	
 	private RowMapperSource rowMapperSource;
 	
@@ -31,7 +30,7 @@ public class VirpContextTest {
 	
 	@Before
 	public void setup() {
-		testObj = new VirpContext();
+		testObj = new VirpSession();
 		rowMapperSource = createMock(RowMapperSource.class);
 		metaReader = EasyMock.createMock(RowMapperMetaDataReader.class);
 		testObj.setRowMapperSource(rowMapperSource);
