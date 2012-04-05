@@ -1,12 +1,10 @@
 package com.jshnd.virp.reflection;
 
-import static org.junit.Assert.*;
+import org.junit.Test;
 
 import java.lang.reflect.Method;
 
-import org.junit.Test;
-
-import com.jshnd.virp.reflection.MethodGetter;
+import static org.junit.Assert.assertEquals;
 
 public class MethodGetterTest {
 

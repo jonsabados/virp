@@ -1,13 +1,12 @@
 package com.jshnd.virp.config;
 
-import java.util.Collection;
-
+import com.jshnd.virp.annotation.RowMapper;
 import org.reflections.Reflections;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 import org.reflections.util.FilterBuilder;
 
-import com.jshnd.virp.annotation.RowMapper;
+import java.util.Collection;
 
 public class ReflectionsRowMapperSource implements RowMapperSource {
 

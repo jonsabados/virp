@@ -1,9 +1,9 @@
 package com.jshnd.virp.reflection;
 
-import java.lang.reflect.Method;
-
-import com.jshnd.virp.VirpException;
 import com.jshnd.virp.ColumnGetter;
+import com.jshnd.virp.VirpException;
+
+import java.lang.reflect.Method;
 
 public class MethodGetter implements ColumnGetter {
 

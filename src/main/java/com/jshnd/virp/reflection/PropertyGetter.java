@@ -1,14 +1,14 @@
 package com.jshnd.virp.reflection;
 
-import java.lang.reflect.Field;
-
-import com.jshnd.virp.VirpException;
 import com.jshnd.virp.ColumnGetter;
+import com.jshnd.virp.VirpException;
+
+import java.lang.reflect.Field;
 
 public class PropertyGetter implements ColumnGetter {
 
 	private Field field;
-	
+
 	private String columnName;
 
 	@Override
@@ -20,7 +20,7 @@ public class PropertyGetter implements ColumnGetter {
 	public Object getColumnValue(Object sourceObject) {
 		try {
 			return field.get(sourceObject);
-		} catch(Exception e) {
+		} catch (Exception e) {
 			throw new VirpException(e);
 		}
 	}
@@ -32,5 +32,5 @@ public class PropertyGetter implements ColumnGetter {
 	public void setColumnName(String columnName) {
 		this.columnName = columnName;
 	}
-	
+
 }

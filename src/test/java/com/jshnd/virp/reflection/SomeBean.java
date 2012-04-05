@@ -8,9 +8,9 @@ public class SomeBean {
 
 	@Column(name = "foo")
 	private String columnProperty;
-	
+
 	private String methodProperty;
-	
+
 	public String getSomeProperty() {
 		return someProperty;
 	}
@@ -35,5 +35,5 @@ public class SomeBean {
 	public void setColumnProperty(String columnProperty) {
 		this.columnProperty = columnProperty;
 	}
-	
+
 }

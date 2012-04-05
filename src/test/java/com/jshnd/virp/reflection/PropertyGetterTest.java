@@ -1,12 +1,10 @@
 package com.jshnd.virp.reflection;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 import java.lang.reflect.Field;
 
-import org.junit.Test;
-
-import com.jshnd.virp.reflection.PropertyGetter;
+import static org.junit.Assert.assertEquals;
 
 
 public class PropertyGetterTest {
