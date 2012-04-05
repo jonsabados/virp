@@ -2,4 +2,5 @@ tmp
 .project
 .settings
 .classpath
+.idea
 target
