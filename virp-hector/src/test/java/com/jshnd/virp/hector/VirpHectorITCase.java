@@ -1,4 +1,4 @@
-package com.jshnd.virp;
+package com.jshnd.virp.hector;
 
 import me.prettyprint.hector.api.Cluster;
 import me.prettyprint.hector.api.Keyspace;
@@ -10,7 +10,7 @@ import org.junit.Test;
 import static me.prettyprint.hector.api.factory.HFactory.createKeyspace;
 import static me.prettyprint.hector.api.factory.HFactory.getOrCreateCluster;
 
-public class VirpSessionITCase {
+public class VirpHectorITCase {
 
 	private static EmbeddedServerHelper helper;
 

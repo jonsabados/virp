@@ -3,7 +3,6 @@ package com.jshnd.virp;
 import com.jshnd.virp.config.RowMapperMetaData;
 import com.jshnd.virp.config.RowMapperMetaDataReader;
 import com.jshnd.virp.config.RowMapperSource;
-import me.prettyprint.hector.api.Keyspace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,8 +20,6 @@ public class VirpSession {
 	private RowMapperMetaDataReader metaDataReader;
 
 	private Map<Class<?>, RowMapperMetaData> configuredClasses;
-
-	private Keyspace keyspace;
 
 	public void init() {
 		Map<Class<?>, RowMapperMetaData> workingMap = new HashMap<Class<?>, RowMapperMetaData>();

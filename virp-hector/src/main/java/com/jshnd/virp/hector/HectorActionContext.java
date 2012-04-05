@@ -14,13 +14,14 @@ public class HectorActionContext<T> implements VirpActionContext {
 	private Mutator<T> mutator;
 
 	@Override
-	public void complete() throws VirpException {
+	public HectorActionResult complete() throws VirpException {
 		try {
 			MutationResult result = mutator.execute();
 			if (log.isDebugEnabled()) {
 				log.debug("Mutation in " + result.getExecutionTimeNano());
 				log.debug("Host executed against: " + result.getHostUsed().getIp());
 			}
+			return new HectorActionResult(result);
 		} catch (Exception e) {
 			throw new VirpException(e);
 		}
