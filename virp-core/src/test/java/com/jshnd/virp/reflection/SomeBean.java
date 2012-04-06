@@ -1,7 +1,9 @@
 package com.jshnd.virp.reflection;
 
 import com.jshnd.virp.annotation.Column;
+import com.jshnd.virp.annotation.RowMapper;
 
+@RowMapper(columnFamily = "SomeBean")
 public class SomeBean {
 
 	private String someProperty;

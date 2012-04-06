@@ -2,7 +2,7 @@ package com.jshnd.virp.config.dummyclasses.mapped;
 
 import com.jshnd.virp.annotation.RowMapper;
 
-@RowMapper
+@RowMapper(columnFamily = "SomeClass")
 public class SomeClass {
 
 }

@@ -1,9 +1,9 @@
-package com.jshnd.virp.config;
+package com.jshnd.virp.annotation;
 
 import com.jshnd.virp.ColumnGetter;
 import com.jshnd.virp.VirpException;
-import com.jshnd.virp.annotation.Column;
-import com.jshnd.virp.annotation.KeyColumn;
+import com.jshnd.virp.config.RowMapperMetaData;
+import com.jshnd.virp.config.RowMapperMetaDataReader;
 import com.jshnd.virp.reflection.MethodGetter;
 import com.jshnd.virp.reflection.PropertyGetter;
 import org.slf4j.Logger;
@@ -25,6 +25,12 @@ public class AnnotationDrivenRowMapperMetaDataReader implements RowMapperMetaDat
 	@Override
 	public RowMapperMetaData readClass(Class<?> clazz) {
 		RowMapperMetaData ret = new RowMapperMetaData(clazz);
+		RowMapper mapperAnnotation = clazz.getAnnotation(RowMapper.class);
+		if (null == mapperAnnotation) {
+			throw new VirpAnnotationException(clazz.getCanonicalName() +
+					" missing required annotation: " + RowMapper.class.getCanonicalName());
+		}
+		ret.setColumnFamily(mapperAnnotation.columnFamily());
 		Set<ColumnGetter> getters = new HashSet<ColumnGetter>();
 		if (readMethods) {
 			generateMethodGetters(clazz, ret, getters);

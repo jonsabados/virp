@@ -1,6 +1,7 @@
-package com.jshnd.virp.config;
+package com.jshnd.virp.annotation;
 
 import com.jshnd.virp.annotation.RowMapper;
+import com.jshnd.virp.config.RowMapperSource;
 import org.reflections.Reflections;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;

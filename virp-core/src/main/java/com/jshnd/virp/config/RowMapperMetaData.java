@@ -9,6 +9,8 @@ public class RowMapperMetaData {
 
 	private Class<?> rowMapperClass;
 
+	private String columnFamily;
+
 	private ColumnGetter keyColumnGetter;
 
 	private Set<ColumnGetter> columnGetters;
@@ -24,6 +26,14 @@ public class RowMapperMetaData {
 
 	public void setRowMapperClass(Class<?> rowMapperClass) {
 		this.rowMapperClass = rowMapperClass;
+	}
+
+	public String getColumnFamily() {
+		return columnFamily;
+	}
+
+	public void setColumnFamily(String columnFamily) {
+		this.columnFamily = columnFamily;
 	}
 
 	public Set<ColumnGetter> getColumnGetters() {

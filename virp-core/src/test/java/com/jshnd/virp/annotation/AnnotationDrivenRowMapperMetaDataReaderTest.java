@@ -1,10 +1,9 @@
-package com.jshnd.virp.config;
+package com.jshnd.virp.annotation;
 
 import com.google.common.collect.Iterables;
 import com.jshnd.virp.ColumnGetter;
 import com.jshnd.virp.VirpException;
-import com.jshnd.virp.annotation.Column;
-import com.jshnd.virp.annotation.KeyColumn;
+import com.jshnd.virp.config.RowMapperMetaData;
 import com.jshnd.virp.reflection.SomeBean;
 import org.junit.Before;
 import org.junit.Rule;
@@ -23,31 +22,12 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 	@Rule
 	public ExpectedException expectedException = ExpectedException.none();
 
-	private static class OkPropertyKeyTester {
-
-		@KeyColumn
-		@Column(name = "foo")
-		@SuppressWarnings("unused") // reflection
-		private String key;
-
+	@Before
+	public void setup() {
+		testObj = new AnnotationDrivenRowMapperMetaDataReader();
 	}
 
-	private static class OkMethodKeyTester {
-
-		private String key;
-
-		@KeyColumn
-		@Column(name = "foo")
-		@SuppressWarnings("unused")  // reflection
-		public String getKey() {
-			return key;
-		}
-
-		public void setKey(String key) {
-			this.key = key;
-		}
-	}
-
+	@RowMapper(columnFamily = "dontCare")
 	private static class BadKeyTester {
 
 		@KeyColumn
@@ -65,16 +45,21 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 
 	}
 
-	@Before
-	public void setup() {
-		testObj = new AnnotationDrivenRowMapperMetaDataReader();
-	}
-
 	@Test
 	public void testDuplicateKeyColumn() {
 		expectedException.expect(VirpException.class);
 		expectedException.expectMessage("Classes may only have a single key column");
 		testObj.readClass(BadKeyTester.class);
+	}
+
+	@RowMapper(columnFamily = "dontCare")
+	private static class OkPropertyKeyTester {
+
+		@KeyColumn
+		@Column(name = "foo")
+		@SuppressWarnings("unused") // reflection
+		private String key;
+
 	}
 
 	@Test
@@ -90,6 +75,23 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 		assertEquals("fooBar", getter.getColumnValue(bean));
 	}
 
+	@RowMapper(columnFamily = "dontCare")
+	private static class OkMethodKeyTester {
+
+		private String key;
+
+		@KeyColumn
+		@Column(name = "foo")
+		@SuppressWarnings("unused")  // reflection
+		public String getKey() {
+			return key;
+		}
+
+		public void setKey(String key) {
+			this.key = key;
+		}
+	}
+
 	@Test
 	public void testMethodKeyKeyColumn() {
 		RowMapperMetaData meta = testObj.readClass(OkMethodKeyTester.class);
@@ -100,6 +102,29 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 		ColumnGetter getter = Iterables.getFirst(meta.getColumnGetters(), null);
 		assertEquals("foo", getter.getColumnName());
 		assertEquals("fooBar", getter.getColumnValue(bean));
+	}
+
+	@RowMapper(columnFamily = "testIng")
+	public static class ColumnFamilyTester {
+
+	}
+
+	@Test
+	public void testColumnFamily() {
+		RowMapperMetaData meta = testObj.readClass(ColumnFamilyTester.class);
+		assertEquals("testIng", meta.getColumnFamily());
+	}
+
+	public static class MissingAnnotationTester {
+
+	}
+
+	@Test
+	public void testColumnFamilyMissing() {
+		expectedException.expect(VirpAnnotationException.class);
+		expectedException.expectMessage(MissingAnnotationTester.class.getCanonicalName() +
+				" missing required annotation: " + RowMapper.class.getCanonicalName());
+		testObj.readClass(MissingAnnotationTester.class);
 	}
 
 	@Test
