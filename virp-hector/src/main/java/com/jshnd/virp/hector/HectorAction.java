@@ -1,6 +1,6 @@
 package com.jshnd.virp.hector;
 
-import com.jshnd.virp.ColumnGetter;
+import com.jshnd.virp.ColumnAccessor;
 import com.jshnd.virp.VirpAction;
 import com.jshnd.virp.VirpException;
 import com.jshnd.virp.config.RowMapperMetaData;
@@ -25,10 +25,10 @@ public class HectorAction<T> implements VirpAction {
 	@Override
 	public void writeRow(Object row, RowMapperMetaData rowMeta) {
 		String columnFamily = rowMeta.getColumnFamily();
-		T key = (T) rowMeta.getKeyColumnGetter().getColumnValue(row);
-		for(ColumnGetter getter : rowMeta.getColumnGetters()) {
-			HColumn hcolumn = HFactory.createColumn(getter.getColumnName(),
-					(String) getter.getColumnValue(row), StringSerializer.get(), StringSerializer.get());
+		T key = (T) rowMeta.getKeyValueAccessor().getValue(row);
+		for(ColumnAccessor accessor : rowMeta.getColumnAccessors()) {
+			HColumn hcolumn = HFactory.createColumn((String) key,
+					(String) accessor.getValue(row), StringSerializer.get(), StringSerializer.get());
 			mutator.addInsertion(key, columnFamily, hcolumn);
 		}
 	}

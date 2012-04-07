@@ -1,7 +1,8 @@
 package com.jshnd.virp.annotation;
 
 import com.google.common.collect.Iterables;
-import com.jshnd.virp.ColumnGetter;
+import com.jshnd.virp.ColumnAccessor;
+import com.jshnd.virp.ValueType;
 import com.jshnd.virp.VirpException;
 import com.jshnd.virp.config.RowMapperMetaData;
 import com.jshnd.virp.reflection.SomeBean;
@@ -65,14 +66,15 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 	@Test
 	public void testPropertyKeyKeyColumn() {
 		RowMapperMetaData meta = testObj.readClass(OkPropertyKeyTester.class);
-		assertNotNull(meta.getKeyColumnGetter());
+		assertNotNull(meta.getKeyValueAccessor());
 		OkPropertyKeyTester bean = new OkPropertyKeyTester();
 		bean.key = "fooBar";
-		assertEquals("fooBar", meta.getKeyColumnGetter().getColumnValue(bean));
-		assertEquals(1, meta.getColumnGetters().size());
-		ColumnGetter getter = Iterables.getFirst(meta.getColumnGetters(), null);
+		assertEquals("fooBar", meta.getKeyValueAccessor().getValue(bean));
+		assertEquals(ValueType.STRING, meta.getKeyValueAccessor().getValueType());
+		assertEquals(1, meta.getColumnAccessors().size());
+		ColumnAccessor getter = Iterables.getFirst(meta.getColumnAccessors(), null);
 		assertEquals("foo", getter.getColumnName());
-		assertEquals("fooBar", getter.getColumnValue(bean));
+		assertEquals("fooBar", getter.getValue(bean));
 	}
 
 	@RowMapper(columnFamily = "dontCare")
@@ -95,13 +97,14 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 	@Test
 	public void testMethodKeyKeyColumn() {
 		RowMapperMetaData meta = testObj.readClass(OkMethodKeyTester.class);
-		assertNotNull(meta.getKeyColumnGetter());
+		assertNotNull(meta.getKeyValueAccessor());
 		OkMethodKeyTester bean = new OkMethodKeyTester();
 		bean.setKey("fooBar");
-		assertEquals("fooBar", meta.getKeyColumnGetter().getColumnValue(bean));
-		ColumnGetter getter = Iterables.getFirst(meta.getColumnGetters(), null);
+		assertEquals("fooBar", meta.getKeyValueAccessor().getValue(bean));
+		assertEquals(ValueType.STRING, meta.getKeyValueAccessor().getValueType());
+		ColumnAccessor getter = Iterables.getFirst(meta.getColumnAccessors(), null);
 		assertEquals("foo", getter.getColumnName());
-		assertEquals("fooBar", getter.getColumnValue(bean));
+		assertEquals("fooBar", getter.getValue(bean));
 	}
 
 	@RowMapper(columnFamily = "testIng")
@@ -132,17 +135,18 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 		testObj.setReadProperties(false);
 		RowMapperMetaData meta = testObj.readClass(SomeBean.class);
 		assertEquals(SomeBean.class, meta.getRowMapperClass());
-		Set<ColumnGetter> columnGetters = meta.getColumnGetters();
-		assertEquals(1, columnGetters.size());
-		ColumnGetter getter = Iterables.getFirst(columnGetters, null);
+		Set<ColumnAccessor> valueAccessors = meta.getColumnAccessors();
+		assertEquals(1, valueAccessors.size());
+		ColumnAccessor getter = Iterables.getFirst(valueAccessors, null);
 		assertNotNull(getter);
 		assertEquals("bar", getter.getColumnName());
+		assertEquals(ValueType.STRING, getter.getValueType());
 
 		SomeBean source = new SomeBean();
 		source.setSomeProperty("notme");
 		source.setMethodProperty("fooBar!");
 
-		assertEquals("fooBar!", getter.getColumnValue(source));
+		assertEquals("fooBar!", getter.getValue(source));
 	}
 
 	@Test
@@ -150,17 +154,18 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 		testObj.setReadMethods(false);
 		RowMapperMetaData meta = testObj.readClass(SomeBean.class);
 		assertEquals(SomeBean.class, meta.getRowMapperClass());
-		Set<ColumnGetter> columnGetters = meta.getColumnGetters();
-		assertEquals(1, columnGetters.size());
-		ColumnGetter getter = Iterables.getFirst(columnGetters, null);
+		Set<ColumnAccessor> valueAccessors = meta.getColumnAccessors();
+		assertEquals(1, valueAccessors.size());
+		ColumnAccessor getter = Iterables.getFirst(valueAccessors, null);
 		assertNotNull(getter);
 		assertEquals("foo", getter.getColumnName());
+		assertEquals(ValueType.STRING, getter.getValueType());
 
 		SomeBean source = new SomeBean();
 		source.setMethodProperty("notme");
 		source.setColumnProperty("fooBar!");
 
-		assertEquals("fooBar!", getter.getColumnValue(source));
+		assertEquals("fooBar!", getter.getValue(source));
 	}
 
 }

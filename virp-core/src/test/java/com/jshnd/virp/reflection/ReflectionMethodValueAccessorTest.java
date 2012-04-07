@@ -6,16 +6,16 @@ import java.lang.reflect.Method;
 
 import static org.junit.Assert.assertEquals;
 
-public class MethodGetterTest {
+public class ReflectionMethodValueAccessorTest {
 
 	@Test
 	public void testGetColumnValue() throws SecurityException, NoSuchMethodException {
 		Method method = SomeBean.class.getMethod("getSomeProperty");
-		MethodGetter getter = new MethodGetter();
-		getter.setGetterMethod(method);
+		ReflectionMethodValueAccessor valueAccessorReflection = new ReflectionMethodValueAccessor();
+		valueAccessorReflection.setGetterMethod(method);
 		SomeBean bean = new SomeBean();
 		bean.setSomeProperty("foo");
-		assertEquals("foo", getter.getColumnValue(bean));
+		assertEquals("foo", valueAccessorReflection.getValue(bean));
 	}
 
 }

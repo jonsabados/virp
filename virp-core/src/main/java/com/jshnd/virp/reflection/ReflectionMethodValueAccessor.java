@@ -1,17 +1,18 @@
 package com.jshnd.virp.reflection;
 
-import com.jshnd.virp.ColumnGetter;
+import com.jshnd.virp.ValueAccessor;
+import com.jshnd.virp.ValueType;
 import com.jshnd.virp.VirpException;
 
 import java.lang.reflect.Method;
 
-public class MethodGetter implements ColumnGetter {
+public class ReflectionMethodValueAccessor implements ValueAccessor {
 
 	private Method getterMethod;
 
-	private String columnName;
+	private ValueType valueType;
 
-	public Object getColumnValue(Object sourceObject) {
+	public Object getValue(Object sourceObject) {
 		try {
 			return getterMethod.invoke(sourceObject);
 		} catch (Exception e) {
@@ -24,12 +25,12 @@ public class MethodGetter implements ColumnGetter {
 	}
 
 	@Override
-	public String getColumnName() {
-		return columnName;
+	public ValueType getValueType() {
+		return valueType;
 	}
 
-	public void setColumnName(String columnName) {
-		this.columnName = columnName;
+	public void setValueType(ValueType valueType) {
+		this.valueType = valueType;
 	}
 
 }

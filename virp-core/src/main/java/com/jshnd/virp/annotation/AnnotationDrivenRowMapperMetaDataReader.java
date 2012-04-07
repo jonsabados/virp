@@ -1,11 +1,10 @@
 package com.jshnd.virp.annotation;
 
-import com.jshnd.virp.ColumnGetter;
-import com.jshnd.virp.VirpException;
+import com.jshnd.virp.*;
 import com.jshnd.virp.config.RowMapperMetaData;
 import com.jshnd.virp.config.RowMapperMetaDataReader;
-import com.jshnd.virp.reflection.MethodGetter;
-import com.jshnd.virp.reflection.PropertyGetter;
+import com.jshnd.virp.reflection.ReflectionFieldValueAccessor;
+import com.jshnd.virp.reflection.ReflectionMethodValueAccessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,18 +30,18 @@ public class AnnotationDrivenRowMapperMetaDataReader implements RowMapperMetaDat
 					" missing required annotation: " + RowMapper.class.getCanonicalName());
 		}
 		ret.setColumnFamily(mapperAnnotation.columnFamily());
-		Set<ColumnGetter> getters = new HashSet<ColumnGetter>();
+		Set<ColumnAccessor> getters = new HashSet<ColumnAccessor>();
 		if (readMethods) {
 			generateMethodGetters(clazz, ret, getters);
 		}
 		if (readProperties) {
 			generatePropertyGetters(clazz, ret, getters);
 		}
-		ret.setColumnGetters(getters);
+		ret.setColumnAccessors(getters);
 		return ret;
 	}
 
-	private void generateMethodGetters(Class<?> clazz, RowMapperMetaData meta, Set<ColumnGetter> columnGetters) {
+	private void generateMethodGetters(Class<?> clazz, RowMapperMetaData meta, Set<ColumnAccessor> valueAccessors) {
 		Method[] methods = clazz.getDeclaredMethods();
 		log.info("Inspecting " + methods.length + " for annotation " + Column.class.getCanonicalName());
 		for (Method method : methods) {
@@ -51,24 +50,25 @@ public class AnnotationDrivenRowMapperMetaDataReader implements RowMapperMetaDat
 				if (!method.isAccessible()) {
 					method.setAccessible(true);
 				}
-				MethodGetter getter = new MethodGetter();
-				getter.setColumnName(column.name());
-				getter.setGetterMethod(method);
-				columnGetters.add(getter);
+				ReflectionMethodValueAccessor accessor = new ReflectionMethodValueAccessor();
+				accessor.setValueType(TypeUtils.getType(method.getReturnType()));
+				accessor.setGetterMethod(method);
+				valueAccessors.add(new BasicColumnAccessor(column.name(), accessor));
 			}
 			if (method.getAnnotation(KeyColumn.class) != null) {
 				enforceSingleKeyColumn(meta);
 				if (!method.isAccessible()) {
 					method.setAccessible(true);
 				}
-				MethodGetter getter = new MethodGetter();
-				getter.setGetterMethod(method);
-				meta.setKeyColumnGetter(getter);
+				ReflectionMethodValueAccessor accessor = new ReflectionMethodValueAccessor();
+				accessor.setGetterMethod(method);
+				accessor.setValueType(TypeUtils.getType(method.getReturnType()));
+				meta.setKeyValueAccessor(accessor);
 			}
 		}
 	}
 
-	private void generatePropertyGetters(Class<?> clazz, RowMapperMetaData meta, Set<ColumnGetter> columnGetters) {
+	private void generatePropertyGetters(Class<?> clazz, RowMapperMetaData meta, Set<ColumnAccessor> valueAccessors) {
 		Field[] fields = clazz.getDeclaredFields();
 		log.info("Inspecting " + fields.length + " for annotation " + Column.class.getCanonicalName());
 		for (Field field : fields) {
@@ -77,25 +77,26 @@ public class AnnotationDrivenRowMapperMetaDataReader implements RowMapperMetaDat
 				if (!field.isAccessible()) {
 					field.setAccessible(true);
 				}
-				PropertyGetter getter = new PropertyGetter();
-				getter.setColumnName(column.name());
-				getter.setField(field);
-				columnGetters.add(getter);
+				ReflectionFieldValueAccessor accessor = new ReflectionFieldValueAccessor();
+				accessor.setValueType(TypeUtils.getType(field.getType()));
+				accessor.setField(field);
+				valueAccessors.add(new BasicColumnAccessor(column.name(), accessor));
 			}
 			if (field.getAnnotation(KeyColumn.class) != null) {
 				enforceSingleKeyColumn(meta);
 				if (!field.isAccessible()) {
 					field.setAccessible(true);
 				}
-				PropertyGetter getter = new PropertyGetter();
+				ReflectionFieldValueAccessor getter = new ReflectionFieldValueAccessor();
 				getter.setField(field);
-				meta.setKeyColumnGetter(getter);
+				getter.setValueType(TypeUtils.getType(field.getType()));
+				meta.setKeyValueAccessor(getter);
 			}
 		}
 	}
 
 	private void enforceSingleKeyColumn(RowMapperMetaData meta) {
-		if (meta.getKeyColumnGetter() != null) {
+		if (meta.getKeyValueAccessor() != null) {
 			throw new VirpException("Classes may only have a single key column");
 		}
 	}

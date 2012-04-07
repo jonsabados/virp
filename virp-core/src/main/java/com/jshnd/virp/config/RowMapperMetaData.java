@@ -1,6 +1,7 @@
 package com.jshnd.virp.config;
 
-import com.jshnd.virp.ColumnGetter;
+import com.jshnd.virp.ColumnAccessor;
+import com.jshnd.virp.ValueAccessor;
 
 import java.util.Collections;
 import java.util.Set;
@@ -11,9 +12,9 @@ public class RowMapperMetaData {
 
 	private String columnFamily;
 
-	private ColumnGetter keyColumnGetter;
+	private ValueAccessor keyValueAccessor;
 
-	private Set<ColumnGetter> columnGetters;
+	private Set<ColumnAccessor> columnAccessors;
 
 	public RowMapperMetaData(Class<?> rowMapperClass) {
 		super();
@@ -24,10 +25,6 @@ public class RowMapperMetaData {
 		return rowMapperClass;
 	}
 
-	public void setRowMapperClass(Class<?> rowMapperClass) {
-		this.rowMapperClass = rowMapperClass;
-	}
-
 	public String getColumnFamily() {
 		return columnFamily;
 	}
@@ -36,19 +33,19 @@ public class RowMapperMetaData {
 		this.columnFamily = columnFamily;
 	}
 
-	public Set<ColumnGetter> getColumnGetters() {
-		return columnGetters;
+	public Set<ColumnAccessor> getColumnAccessors() {
+		return columnAccessors;
 	}
 
-	public void setColumnGetters(Set<ColumnGetter> columnGetters) {
-		this.columnGetters = Collections.unmodifiableSet(columnGetters);
+	public void setColumnAccessors(Set<ColumnAccessor> columnAccessors) {
+		this.columnAccessors = Collections.unmodifiableSet(columnAccessors);
 	}
 
-	public ColumnGetter getKeyColumnGetter() {
-		return keyColumnGetter;
+	public ValueAccessor getKeyValueAccessor() {
+		return keyValueAccessor;
 	}
 
-	public void setKeyColumnGetter(ColumnGetter keyColumnGetter) {
-		this.keyColumnGetter = keyColumnGetter;
+	public void setKeyValueAccessor(ValueAccessor keyValueAccessor) {
+		this.keyValueAccessor = keyValueAccessor;
 	}
 }
