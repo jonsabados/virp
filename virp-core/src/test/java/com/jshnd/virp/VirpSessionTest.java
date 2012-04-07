@@ -81,7 +81,7 @@ public class VirpSessionTest {
 		SomeClass toWrite = new SomeClass();
 		VirpAction writer = EasyMock.createMock(VirpAction.class);
 		VirpActionResult result = EasyMock.createMock(VirpActionResult.class);
-		expect(actionFactory.newAction()).andReturn(writer).once();
+		expect(actionFactory.newAction(two)).andReturn(writer).once();
 
 		writer.writeRow(toWrite, two);
 		expectLastCall().once();

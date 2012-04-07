@@ -30,11 +30,12 @@ public class VirpSession {
 			throw new VirpException("Session has not been initialized - call init() first.");
 		}
 		Class<?> rowClass = row.getClass();
-		if(!configuredClasses.containsKey(rowClass)) {
+		RowMapperMetaData meta = configuredClasses.get(rowClass);
+		if(meta == null) {
 			throw new VirpException(rowClass.getCanonicalName() + " has not been configured");
 		}
-		VirpAction action = actionFactory.newAction();
-		action.writeRow(row, configuredClasses.get(rowClass));
+		VirpAction action = actionFactory.newAction(meta);
+		action.writeRow(row, meta);
 		return action.complete();
 	}
 
