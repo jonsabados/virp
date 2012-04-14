@@ -1,28 +1,36 @@
 package com.jshnd.virp;
 
-public class BasicColumnAccessor implements ColumnAccessor {
+public class BasicColumnAccessor<T, V> implements ColumnAccessor<T, V> {
 
-	private String columnName;
+	private T columnIdentifier;
 
-	private ValueAccessor valueAccessor;
+	private Class<T> columnIdentifierType;
 
-	public BasicColumnAccessor(String columnName, ValueAccessor valueAccessor) {
-		this.columnName = columnName;
+	private ValueAccessor<V> valueAccessor;
+
+	public BasicColumnAccessor(T columnIdentifier, Class<T> columnIdentifierType, ValueAccessor<V> valueAccessor) {
+		this.columnIdentifier = columnIdentifier;
+		this.columnIdentifierType = columnIdentifierType;
 		this.valueAccessor = valueAccessor;
 	}
 
 	@Override
-	public String getColumnName() {
-		return columnName;
+	public T getColumnIdentifier() {
+		return columnIdentifier;
 	}
 
 	@Override
-	public Object getValue(Object sourceObject) {
+	public V getValue(Object sourceObject) {
 		return valueAccessor.getValue(sourceObject);
 	}
 
 	@Override
-	public ValueType getValueType() {
+	public Class<T> getColumnIdentifierType() {
+		return columnIdentifierType;
+	}
+
+	@Override
+	public Class<V> getValueType() {
 		return valueAccessor.getValueType();
 	}
 }

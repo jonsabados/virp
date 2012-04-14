@@ -1,36 +1,28 @@
 package com.jshnd.virp.reflection;
 
 import com.jshnd.virp.ValueAccessor;
-import com.jshnd.virp.ValueType;
 import com.jshnd.virp.VirpException;
 
 import java.lang.reflect.Method;
 
-public class ReflectionMethodValueAccessor implements ValueAccessor {
+public class ReflectionMethodValueAccessor<T> implements ValueAccessor<T> {
 
 	private Method getterMethod;
 
-	private ValueType valueType;
+	public ReflectionMethodValueAccessor(Method getterMethod) {
+		this.getterMethod = getterMethod;
+	}
 
-	public Object getValue(Object sourceObject) {
+	public T getValue(Object sourceObject) {
 		try {
-			return getterMethod.invoke(sourceObject);
+			return (T) getterMethod.invoke(sourceObject);
 		} catch (Exception e) {
 			throw new VirpException(e);
 		}
 	}
 
-	public void setGetterMethod(Method getterMethod) {
-		this.getterMethod = getterMethod;
-	}
-
 	@Override
-	public ValueType getValueType() {
-		return valueType;
+	public Class<T> getValueType() {
+		return (Class<T>) getterMethod.getReturnType();
 	}
-
-	public void setValueType(ValueType valueType) {
-		this.valueType = valueType;
-	}
-
 }

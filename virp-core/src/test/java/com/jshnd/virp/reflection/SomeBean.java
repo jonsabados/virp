@@ -1,6 +1,6 @@
 package com.jshnd.virp.reflection;
 
-import com.jshnd.virp.annotation.Column;
+import com.jshnd.virp.annotation.NamedColumn;
 import com.jshnd.virp.annotation.RowMapper;
 
 @RowMapper(columnFamily = "SomeBean")
@@ -8,7 +8,7 @@ public class SomeBean {
 
 	private String someProperty;
 
-	@Column(name = "foo")
+	@NamedColumn(name = "foo")
 	private String columnProperty;
 
 	private String methodProperty;
@@ -21,7 +21,7 @@ public class SomeBean {
 		this.someProperty = someProperty;
 	}
 
-	@Column(name = "bar")
+	@NamedColumn(name = "bar")
 	public String getMethodProperty() {
 		return methodProperty;
 	}

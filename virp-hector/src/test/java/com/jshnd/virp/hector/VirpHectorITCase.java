@@ -3,7 +3,7 @@ package com.jshnd.virp.hector;
 import com.google.common.collect.Sets;
 import com.jshnd.virp.VirpSession;
 import com.jshnd.virp.annotation.AnnotationDrivenRowMapperMetaDataReader;
-import com.jshnd.virp.annotation.Column;
+import com.jshnd.virp.annotation.NamedColumn;
 import com.jshnd.virp.annotation.KeyColumn;
 import com.jshnd.virp.annotation.RowMapper;
 import com.jshnd.virp.config.ConfiguredRowMapperSource;
@@ -69,11 +69,11 @@ public class VirpHectorITCase {
 		@SuppressWarnings("unused")
 		private String key;
 
-		@Column(name = "columnOne")
+		@NamedColumn(name = "columnOne")
 		@SuppressWarnings("unused")
 		private String columnOne;
 
-		@Column(name = "columnTwo")
+		@NamedColumn(name = "columnTwo")
 		@SuppressWarnings("unused")
 		private String columnTwo;
 

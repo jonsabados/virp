@@ -12,9 +12,9 @@ public class RowMapperMetaData {
 
 	private String columnFamily;
 
-	private ValueAccessor keyValueAccessor;
+	private ValueAccessor<?> keyValueAccessor;
 
-	private Set<ColumnAccessor> columnAccessors;
+	private Set<ColumnAccessor<?, ?>> columnAccessors;
 
 	public RowMapperMetaData(Class<?> rowMapperClass) {
 		super();
@@ -33,19 +33,19 @@ public class RowMapperMetaData {
 		this.columnFamily = columnFamily;
 	}
 
-	public Set<ColumnAccessor> getColumnAccessors() {
+	public Set<ColumnAccessor<?,?>> getColumnAccessors() {
 		return columnAccessors;
 	}
 
-	public void setColumnAccessors(Set<ColumnAccessor> columnAccessors) {
+	public void setColumnAccessors(Set<ColumnAccessor<?,?>> columnAccessors) {
 		this.columnAccessors = Collections.unmodifiableSet(columnAccessors);
 	}
 
-	public ValueAccessor getKeyValueAccessor() {
+	public ValueAccessor<?> getKeyValueAccessor() {
 		return keyValueAccessor;
 	}
 
-	public void setKeyValueAccessor(ValueAccessor keyValueAccessor) {
+	public void setKeyValueAccessor(ValueAccessor<?> keyValueAccessor) {
 		this.keyValueAccessor = keyValueAccessor;
 	}
 }

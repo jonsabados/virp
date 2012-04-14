@@ -1,6 +1,8 @@
 package com.jshnd.virp.annotation;
 
-import com.jshnd.virp.*;
+import com.jshnd.virp.BasicColumnAccessor;
+import com.jshnd.virp.ColumnAccessor;
+import com.jshnd.virp.VirpException;
 import com.jshnd.virp.config.RowMapperMetaData;
 import com.jshnd.virp.config.RowMapperMetaDataReader;
 import com.jshnd.virp.reflection.ReflectionFieldValueAccessor;
@@ -8,6 +10,7 @@ import com.jshnd.virp.reflection.ReflectionMethodValueAccessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.HashSet;
@@ -30,7 +33,7 @@ public class AnnotationDrivenRowMapperMetaDataReader implements RowMapperMetaDat
 					" missing required annotation: " + RowMapper.class.getCanonicalName());
 		}
 		ret.setColumnFamily(mapperAnnotation.columnFamily());
-		Set<ColumnAccessor> getters = new HashSet<ColumnAccessor>();
+		Set<ColumnAccessor<?, ?>> getters = new HashSet<ColumnAccessor<?, ?>>();
 		if (readMethods) {
 			generateMethodGetters(clazz, ret, getters);
 		}
@@ -41,55 +44,57 @@ public class AnnotationDrivenRowMapperMetaDataReader implements RowMapperMetaDat
 		return ret;
 	}
 
-	private void generateMethodGetters(Class<?> clazz, RowMapperMetaData meta, Set<ColumnAccessor> valueAccessors) {
+	private void generateMethodGetters(Class<?> clazz, RowMapperMetaData meta, Set<ColumnAccessor<?, ?>> valueAccessors) {
 		Method[] methods = clazz.getDeclaredMethods();
-		log.info("Inspecting " + methods.length + " for annotation " + Column.class.getCanonicalName());
+		log.info("Inspecting " + methods.length + " for annotation " + NamedColumn.class.getCanonicalName());
 		for (Method method : methods) {
-			Column column = method.getAnnotation(Column.class);
-			if (column != null) {
-				if (!method.isAccessible()) {
-					method.setAccessible(true);
-				}
-				ReflectionMethodValueAccessor accessor = new ReflectionMethodValueAccessor();
-				accessor.setValueType(TypeUtils.getType(method.getReturnType()));
-				accessor.setGetterMethod(method);
-				valueAccessors.add(new BasicColumnAccessor(column.name(), accessor));
+			NamedColumn namedColumn = method.getAnnotation(NamedColumn.class);
+			if (namedColumn != null) {
+				makeAccessibleIfNot(method);
+				ReflectionMethodValueAccessor<Object> accessor = new ReflectionMethodValueAccessor<Object>(method);
+				valueAccessors.add(new BasicColumnAccessor<String, Object>(namedColumn.name(), String.class, accessor));
+			}
+			NumberedColumn numberedColumn = method.getAnnotation(NumberedColumn.class);
+			if (numberedColumn != null) {
+				makeAccessibleIfNot(method);
+				ReflectionMethodValueAccessor<Object> accessor = new ReflectionMethodValueAccessor<Object>(method);
+				valueAccessors.add(new BasicColumnAccessor<Long, Object>(numberedColumn.number(), Long.class, accessor));
 			}
 			if (method.getAnnotation(KeyColumn.class) != null) {
 				enforceSingleKeyColumn(meta);
-				if (!method.isAccessible()) {
-					method.setAccessible(true);
-				}
-				ReflectionMethodValueAccessor accessor = new ReflectionMethodValueAccessor();
-				accessor.setGetterMethod(method);
-				accessor.setValueType(TypeUtils.getType(method.getReturnType()));
+				makeAccessibleIfNot(method);
+				ReflectionMethodValueAccessor accessor = new ReflectionMethodValueAccessor(method);
 				meta.setKeyValueAccessor(accessor);
 			}
 		}
 	}
 
-	private void generatePropertyGetters(Class<?> clazz, RowMapperMetaData meta, Set<ColumnAccessor> valueAccessors) {
+	private void makeAccessibleIfNot(AccessibleObject accessibleObject) {
+		if (!accessibleObject.isAccessible()) {
+			accessibleObject.setAccessible(true);
+		}
+	}
+
+	private void generatePropertyGetters(Class<?> clazz, RowMapperMetaData meta, Set<ColumnAccessor<?, ?>> valueAccessors) {
 		Field[] fields = clazz.getDeclaredFields();
-		log.info("Inspecting " + fields.length + " for annotation " + Column.class.getCanonicalName());
+		log.info("Inspecting " + fields.length + " for annotation " + NamedColumn.class.getCanonicalName());
 		for (Field field : fields) {
-			Column column = field.getAnnotation(Column.class);
+			NamedColumn column = field.getAnnotation(NamedColumn.class);
 			if (column != null) {
-				if (!field.isAccessible()) {
-					field.setAccessible(true);
-				}
-				ReflectionFieldValueAccessor accessor = new ReflectionFieldValueAccessor();
-				accessor.setValueType(TypeUtils.getType(field.getType()));
-				accessor.setField(field);
-				valueAccessors.add(new BasicColumnAccessor(column.name(), accessor));
+				makeAccessibleIfNot(field);
+				ReflectionFieldValueAccessor<Object> accessor = new ReflectionFieldValueAccessor<Object>(field);
+				valueAccessors.add(new BasicColumnAccessor<String, Object>(column.name(), String.class, accessor));
+			}
+			NumberedColumn numberedColumn = field.getAnnotation(NumberedColumn.class);
+			if (numberedColumn != null) {
+				makeAccessibleIfNot(field);
+				ReflectionFieldValueAccessor<Object> accessor = new ReflectionFieldValueAccessor<Object>(field);
+				valueAccessors.add(new BasicColumnAccessor<Long, Object>(numberedColumn.number(), Long.class, accessor));
 			}
 			if (field.getAnnotation(KeyColumn.class) != null) {
 				enforceSingleKeyColumn(meta);
-				if (!field.isAccessible()) {
-					field.setAccessible(true);
-				}
-				ReflectionFieldValueAccessor getter = new ReflectionFieldValueAccessor();
-				getter.setField(field);
-				getter.setValueType(TypeUtils.getType(field.getType()));
+				makeAccessibleIfNot(field);
+				ReflectionFieldValueAccessor<Object> getter = new ReflectionFieldValueAccessor<Object>(field);
 				meta.setKeyValueAccessor(getter);
 			}
 		}

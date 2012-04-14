@@ -13,8 +13,7 @@ public class ReflectionFieldValueAccessorTest {
 	public void testGetColumnValue() throws SecurityException, NoSuchFieldException {
 		Field field = SomeBean.class.getDeclaredField("someProperty");
 		field.setAccessible(true);
-		ReflectionFieldValueAccessor getter = new ReflectionFieldValueAccessor();
-		getter.setField(field);
+		ReflectionFieldValueAccessor getter = new ReflectionFieldValueAccessor(field);
 		SomeBean bean = new SomeBean();
 		bean.setSomeProperty("foo");
 		assertEquals("foo", getter.getValue(bean));

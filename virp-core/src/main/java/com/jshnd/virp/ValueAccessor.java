@@ -1,9 +1,9 @@
 package com.jshnd.virp;
 
-public interface ValueAccessor {
+public interface ValueAccessor<T> {
 
-	public Object getValue(Object sourceObject);
+	public T getValue(Object sourceObject);
 
-	public ValueType getValueType();
+	public Class<T> getValueType();
 
 }

@@ -2,7 +2,6 @@ package com.jshnd.virp.annotation;
 
 import com.google.common.collect.Iterables;
 import com.jshnd.virp.ColumnAccessor;
-import com.jshnd.virp.ValueType;
 import com.jshnd.virp.VirpException;
 import com.jshnd.virp.config.RowMapperMetaData;
 import com.jshnd.virp.reflection.SomeBean;
@@ -57,7 +56,7 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 	private static class OkPropertyKeyTester {
 
 		@KeyColumn
-		@Column(name = "foo")
+		@NamedColumn(name = "foo")
 		@SuppressWarnings("unused") // reflection
 		private String key;
 
@@ -70,10 +69,10 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 		OkPropertyKeyTester bean = new OkPropertyKeyTester();
 		bean.key = "fooBar";
 		assertEquals("fooBar", meta.getKeyValueAccessor().getValue(bean));
-		assertEquals(ValueType.STRING, meta.getKeyValueAccessor().getValueType());
+		assertEquals(String.class, meta.getKeyValueAccessor().getValueType());
 		assertEquals(1, meta.getColumnAccessors().size());
 		ColumnAccessor getter = Iterables.getFirst(meta.getColumnAccessors(), null);
-		assertEquals("foo", getter.getColumnName());
+		assertEquals("foo", getter.getColumnIdentifier());
 		assertEquals("fooBar", getter.getValue(bean));
 	}
 
@@ -83,7 +82,7 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 		private String key;
 
 		@KeyColumn
-		@Column(name = "foo")
+		@NamedColumn(name = "foo")
 		@SuppressWarnings("unused")  // reflection
 		public String getKey() {
 			return key;
@@ -101,9 +100,9 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 		OkMethodKeyTester bean = new OkMethodKeyTester();
 		bean.setKey("fooBar");
 		assertEquals("fooBar", meta.getKeyValueAccessor().getValue(bean));
-		assertEquals(ValueType.STRING, meta.getKeyValueAccessor().getValueType());
+		assertEquals(String.class, meta.getKeyValueAccessor().getValueType());
 		ColumnAccessor getter = Iterables.getFirst(meta.getColumnAccessors(), null);
-		assertEquals("foo", getter.getColumnName());
+		assertEquals("foo", getter.getColumnIdentifier());
 		assertEquals("fooBar", getter.getValue(bean));
 	}
 
@@ -135,12 +134,12 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 		testObj.setReadProperties(false);
 		RowMapperMetaData meta = testObj.readClass(SomeBean.class);
 		assertEquals(SomeBean.class, meta.getRowMapperClass());
-		Set<ColumnAccessor> valueAccessors = meta.getColumnAccessors();
+		Set<ColumnAccessor<?,?>> valueAccessors = meta.getColumnAccessors();
 		assertEquals(1, valueAccessors.size());
 		ColumnAccessor getter = Iterables.getFirst(valueAccessors, null);
 		assertNotNull(getter);
-		assertEquals("bar", getter.getColumnName());
-		assertEquals(ValueType.STRING, getter.getValueType());
+		assertEquals("bar", getter.getColumnIdentifier());
+		assertEquals(String.class, getter.getValueType());
 
 		SomeBean source = new SomeBean();
 		source.setSomeProperty("notme");
@@ -154,12 +153,12 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 		testObj.setReadMethods(false);
 		RowMapperMetaData meta = testObj.readClass(SomeBean.class);
 		assertEquals(SomeBean.class, meta.getRowMapperClass());
-		Set<ColumnAccessor> valueAccessors = meta.getColumnAccessors();
+		Set<ColumnAccessor<?, ?>> valueAccessors = meta.getColumnAccessors();
 		assertEquals(1, valueAccessors.size());
 		ColumnAccessor getter = Iterables.getFirst(valueAccessors, null);
 		assertNotNull(getter);
-		assertEquals("foo", getter.getColumnName());
-		assertEquals(ValueType.STRING, getter.getValueType());
+		assertEquals("foo", getter.getColumnIdentifier());
+		assertEquals(String.class, getter.getValueType());
 
 		SomeBean source = new SomeBean();
 		source.setMethodProperty("notme");

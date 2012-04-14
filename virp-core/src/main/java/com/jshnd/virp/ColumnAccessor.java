@@ -1,7 +1,9 @@
 package com.jshnd.virp;
 
-public interface ColumnAccessor extends ValueAccessor {
+public interface ColumnAccessor<T, V> extends ValueAccessor<V> {
 
-	public Object getColumnName();
+	public T getColumnIdentifier();
+
+	public Class<T> getColumnIdentifierType();
 
 }
