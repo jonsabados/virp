@@ -5,7 +5,7 @@ public abstract class BaseValueAccessor<T> implements  ValueAccessor<T> {
 	private Object meta;
 
 	@Override
-	public Object meta() {
+	public Object getMeta() {
 		return meta;
 	}
 

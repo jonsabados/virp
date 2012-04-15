@@ -62,7 +62,7 @@ public class AnnotationDrivenRowMapperMetaDataReader implements RowMapperMetaDat
 				makeAccessibleIfNot(method);
 				ReflectionMethodValueAccessor<Object> accessor = new ReflectionMethodValueAccessor<Object>(method);
 				valueAccessors.add(new BasicColumnAccessor<Long, Object>(
-						new StaticValueAccessor<Long>(numberedColumn.number(), Long.class), accessor));
+						new StaticValueAccessor<Long>(Long.valueOf(numberedColumn.number()), Long.class), accessor));
 			}
 			if (method.getAnnotation(KeyColumn.class) != null) {
 				enforceSingleKeyColumn(meta);
@@ -96,7 +96,7 @@ public class AnnotationDrivenRowMapperMetaDataReader implements RowMapperMetaDat
 				makeAccessibleIfNot(field);
 				ReflectionFieldValueAccessor<Object> accessor = new ReflectionFieldValueAccessor<Object>(field);
 				valueAccessors.add(new BasicColumnAccessor<Long, Object>(
-						new StaticValueAccessor<Long>(numberedColumn.number(), Long.class), accessor));
+						new StaticValueAccessor<Long>(Long.valueOf(numberedColumn.number()), Long.class), accessor));
 			}
 			if (field.getAnnotation(KeyColumn.class) != null) {
 				enforceSingleKeyColumn(meta);

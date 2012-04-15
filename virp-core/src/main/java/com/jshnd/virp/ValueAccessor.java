@@ -6,7 +6,7 @@ public interface ValueAccessor<T> {
 
 	public Class<T> getValueType();
 
-	public Object meta();
+	public Object getMeta();
 
 	public void setMeta(Object meta);
 

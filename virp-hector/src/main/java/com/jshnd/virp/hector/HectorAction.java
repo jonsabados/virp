@@ -32,7 +32,7 @@ public class HectorAction<T> implements VirpAction {
 			ValueAccessor identifier = accessor.getColumnIdentifier();
 			ValueAccessor value = accessor.getValueAccessor();
 			HColumn hcolumn = HFactory.createColumn(identifier.getValue(row), value.getValue(row),
-					(Serializer) identifier.meta(), (Serializer) value.meta());
+					(Serializer) identifier.getMeta(), (Serializer) value.getMeta());
 			mutator.addInsertion(key, columnFamily, hcolumn);
 		}
 	}
