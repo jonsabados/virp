@@ -8,6 +8,8 @@ public class BasicColumnAccessor<T, V> implements ColumnAccessor<T, V> {
 
 	private ValueAccessor<V> valueAccessor;
 
+	private Object actionFactoryMeta;
+
 	public BasicColumnAccessor(T columnIdentifier, Class<T> columnIdentifierType, ValueAccessor<V> valueAccessor) {
 		this.columnIdentifier = columnIdentifier;
 		this.columnIdentifierType = columnIdentifierType;
@@ -33,4 +35,15 @@ public class BasicColumnAccessor<T, V> implements ColumnAccessor<T, V> {
 	public Class<V> getValueType() {
 		return valueAccessor.getValueType();
 	}
+
+	@Override
+	public Object getActionFactoryMeta() {
+		return actionFactoryMeta;
+	}
+
+	@Override
+	public void setActionFactoryMeta(Object meta) {
+		actionFactoryMeta = meta;
+	}
+
 }

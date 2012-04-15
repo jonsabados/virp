@@ -77,6 +77,56 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 	}
 
 	@RowMapper(columnFamily = "dontCare")
+	private static class NumberedColumnPropertyTester {
+
+		@NumberedColumn(number = 10)
+		@SuppressWarnings("unused") // reflection
+		private String key;
+
+	}
+
+	@Test
+	public void testNumberedProperty() {
+		RowMapperMetaData meta = testObj.readClass(NumberedColumnPropertyTester.class);
+		NumberedColumnPropertyTester bean = new NumberedColumnPropertyTester();
+		bean.key = "fooBar";
+		assertEquals(1, meta.getColumnAccessors().size());
+		ColumnAccessor getter = Iterables.getFirst(meta.getColumnAccessors(), null);
+		assertEquals(Long.valueOf(10), getter.getColumnIdentifier());
+		assertEquals(Long.class, getter.getColumnIdentifierType());
+		assertEquals("fooBar", getter.getValue(bean));
+	}
+
+	@RowMapper(columnFamily = "dontCare")
+	private static class NumberedColumnMethodTester {
+
+		private String key;
+
+		@NumberedColumn(number = 10)
+		@SuppressWarnings("unused") // reflection
+		public String getKey() {
+			return key;
+		}
+
+		public void setKey(String key) {
+			this.key = key;
+		}
+	}
+
+	@Test
+	public void testNumberedMethod() {
+		RowMapperMetaData meta = testObj.readClass(NumberedColumnMethodTester.class);
+		NumberedColumnMethodTester bean = new NumberedColumnMethodTester();
+		bean.setKey("fooBar");
+		assertEquals(1, meta.getColumnAccessors().size());
+		ColumnAccessor getter = Iterables.getFirst(meta.getColumnAccessors(), null);
+		assertEquals(Long.valueOf(10), getter.getColumnIdentifier());
+		assertEquals(Long.class, getter.getColumnIdentifierType());
+		assertEquals("fooBar", getter.getValue(bean));
+	}
+
+
+	@RowMapper(columnFamily = "dontCare")
 	private static class OkMethodKeyTester {
 
 		private String key;

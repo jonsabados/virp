@@ -6,4 +6,6 @@ public interface VirpActionFactory {
 
 	public VirpAction newAction(RowMapperMetaData forType);
 
+	public void setupClass(RowMapperMetaData type);
+
 }

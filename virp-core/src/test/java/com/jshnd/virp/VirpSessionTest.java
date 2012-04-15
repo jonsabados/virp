@@ -74,9 +74,10 @@ public class VirpSessionTest {
 		RowMapperMetaData two = new RowMapperMetaData(SomeClass.class);
 		expect(metaReader.readClass(MappedSubclass.class)).andReturn(one).once();
 		expect(metaReader.readClass(SomeClass.class)).andReturn(two).once();
-		replay(rowMapperSource, metaReader);
-
-		testObj.init();
+		actionFactory.setupClass(one);
+		expectLastCall();
+		actionFactory.setupClass(two);
+		expectLastCall();
 
 		SomeClass toWrite = new SomeClass();
 		VirpAction writer = EasyMock.createMock(VirpAction.class);
@@ -86,7 +87,10 @@ public class VirpSessionTest {
 		writer.writeRow(toWrite, two);
 		expectLastCall().once();
 		expect(writer.complete()).andReturn(result).once();
-		replay(writer, actionFactory, result);
+
+		replay(rowMapperSource, metaReader, actionFactory, writer, result);
+		testObj.init();
+
 		assertEquals(result, testObj.writeRow(toWrite));
 		verify(writer, actionFactory, result);
 	}
@@ -99,7 +103,11 @@ public class VirpSessionTest {
 		RowMapperMetaData two = new RowMapperMetaData(SomeClass.class);
 		expect(metaReader.readClass(MappedSubclass.class)).andReturn(one).once();
 		expect(metaReader.readClass(SomeClass.class)).andReturn(two).once();
-		replay(rowMapperSource, metaReader);
+		actionFactory.setupClass(one);
+		expectLastCall();
+		actionFactory.setupClass(two);
+		expectLastCall();
+		replay(rowMapperSource, metaReader, actionFactory);
 
 		testObj.init();
 		Map<Class<?>, RowMapperMetaData> result = testObj.getConfiguredClasses();
@@ -108,7 +116,7 @@ public class VirpSessionTest {
 		assertEquals(one, result.get(MappedSubclass.class));
 		assertEquals(two, result.get(SomeClass.class));
 
-		verify(rowMapperSource, metaReader);
+		verify(rowMapperSource, metaReader, actionFactory);
 	}
 
 	@Test

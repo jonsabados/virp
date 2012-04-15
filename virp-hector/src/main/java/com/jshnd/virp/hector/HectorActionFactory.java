@@ -18,6 +18,11 @@ public class HectorActionFactory implements VirpActionFactory {
 		return new HectorAction<String>(mutator);
 	}
 
+	@Override
+	public void setupClass(RowMapperMetaData type) {
+
+	}
+
 	public void setKeyspace(Keyspace keyspace) {
 		this.keyspace = keyspace;
 	}
