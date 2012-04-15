@@ -2,20 +2,20 @@ package com.jshnd.virp.hector;
 
 import com.google.common.collect.Sets;
 import com.jshnd.virp.VirpSession;
-import com.jshnd.virp.annotation.AnnotationDrivenRowMapperMetaDataReader;
-import com.jshnd.virp.annotation.NamedColumn;
-import com.jshnd.virp.annotation.KeyColumn;
-import com.jshnd.virp.annotation.RowMapper;
+import com.jshnd.virp.annotation.*;
 import com.jshnd.virp.config.ConfiguredRowMapperSource;
 import me.prettyprint.cassandra.model.BasicColumnFamilyDefinition;
 import me.prettyprint.cassandra.model.BasicKeyspaceDefinition;
+import me.prettyprint.cassandra.serializers.LongSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.hector.api.Cluster;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.Serializer;
 import me.prettyprint.hector.api.beans.ColumnSlice;
+import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.ddl.ColumnFamilyDefinition;
 import me.prettyprint.hector.api.factory.HFactory;
+import me.prettyprint.hector.api.query.ColumnQuery;
 import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.SliceQuery;
 import me.prettyprint.hector.testutils.EmbeddedServerHelper;
@@ -77,6 +77,9 @@ public class VirpHectorITCase {
 		@SuppressWarnings("unused")
 		private String columnTwo;
 
+		@NumberedColumn(number = 10)
+		private long columnTen;
+
 	}
 
 	@Test
@@ -98,17 +101,27 @@ public class VirpHectorITCase {
 		row.key = "bob";
 		row.columnOne = "valueForColumnOne";
 		row.columnTwo = "valueForColumnTwo";
+		row.columnTen = 20;
 		session.writeRow(row);
 
-		Serializer serializer = StringSerializer.get();
+		Serializer stringSerializer = StringSerializer.get();
 		SliceQuery<String, String, String> query =
-				HFactory.createSliceQuery(testKeyspace, serializer, serializer, serializer);
+				HFactory.createSliceQuery(testKeyspace, stringSerializer, stringSerializer, stringSerializer);
 		query.setColumnFamily("BasicSaveObject");
 		query.setKey("bob");
 		query.setColumnNames("columnOne", "columnTwo");
 		QueryResult<ColumnSlice<String, String>> result = query.execute();
 		assertEquals("valueForColumnOne", result.get().getColumnByName("columnOne").getValue());
 		assertEquals("valueForColumnTwo", result.get().getColumnByName("columnTwo").getValue());
+
+		Serializer longSerializer = LongSerializer.get();
+		ColumnQuery<String, Long, Long> query2 =
+				HFactory.createColumnQuery(testKeyspace, stringSerializer, longSerializer, longSerializer);
+		query2.setColumnFamily("BasicSaveObject");
+		query2.setKey("bob");
+		query2.setName(Long.valueOf(10));
+		QueryResult<HColumn<Long, Long>> res = query2.execute();
+		assertEquals(Long.valueOf(20), res.get().getValue());
 	}
 
 }

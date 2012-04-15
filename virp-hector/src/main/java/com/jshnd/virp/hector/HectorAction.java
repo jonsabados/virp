@@ -1,10 +1,11 @@
 package com.jshnd.virp.hector;
 
 import com.jshnd.virp.ColumnAccessor;
+import com.jshnd.virp.ValueAccessor;
 import com.jshnd.virp.VirpAction;
 import com.jshnd.virp.VirpException;
 import com.jshnd.virp.config.RowMapperMetaData;
-import me.prettyprint.cassandra.serializers.StringSerializer;
+import me.prettyprint.hector.api.Serializer;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.MutationResult;
@@ -25,10 +26,13 @@ public class HectorAction<T> implements VirpAction {
 	@Override
 	public void writeRow(Object row, RowMapperMetaData rowMeta) {
 		String columnFamily = rowMeta.getColumnFamily();
-		T key = (T) rowMeta.getKeyValueAccessor().getValue(row);
+		ValueAccessor<T> keyAccessor = (ValueAccessor<T>) rowMeta.getKeyValueAccessor();
+		T key = keyAccessor.getValue(row);
 		for(ColumnAccessor accessor : rowMeta.getColumnAccessors()) {
-			HColumn hcolumn = HFactory.createColumn((String) key,
-					(String) accessor.getValue(row), StringSerializer.get(), StringSerializer.get());
+			ValueAccessor identifier = accessor.getColumnIdentifier();
+			ValueAccessor value = accessor.getValueAccessor();
+			HColumn hcolumn = HFactory.createColumn(identifier.getValue(row), value.getValue(row),
+					(Serializer) identifier.meta(), (Serializer) value.meta());
 			mutator.addInsertion(key, columnFamily, hcolumn);
 		}
 	}

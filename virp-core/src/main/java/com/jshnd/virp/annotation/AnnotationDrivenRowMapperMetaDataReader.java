@@ -2,6 +2,7 @@ package com.jshnd.virp.annotation;
 
 import com.jshnd.virp.BasicColumnAccessor;
 import com.jshnd.virp.ColumnAccessor;
+import com.jshnd.virp.StaticValueAccessor;
 import com.jshnd.virp.VirpException;
 import com.jshnd.virp.config.RowMapperMetaData;
 import com.jshnd.virp.config.RowMapperMetaDataReader;
@@ -44,7 +45,8 @@ public class AnnotationDrivenRowMapperMetaDataReader implements RowMapperMetaDat
 		return ret;
 	}
 
-	private void generateMethodGetters(Class<?> clazz, RowMapperMetaData meta, Set<ColumnAccessor<?, ?>> valueAccessors) {
+	private void generateMethodGetters(Class<?> clazz, RowMapperMetaData meta,
+									   Set<ColumnAccessor<?, ?>> valueAccessors) {
 		Method[] methods = clazz.getDeclaredMethods();
 		log.info("Inspecting " + methods.length + " for annotation " + NamedColumn.class.getCanonicalName());
 		for (Method method : methods) {
@@ -52,13 +54,15 @@ public class AnnotationDrivenRowMapperMetaDataReader implements RowMapperMetaDat
 			if (namedColumn != null) {
 				makeAccessibleIfNot(method);
 				ReflectionMethodValueAccessor<Object> accessor = new ReflectionMethodValueAccessor<Object>(method);
-				valueAccessors.add(new BasicColumnAccessor<String, Object>(namedColumn.name(), String.class, accessor));
+				valueAccessors.add(new BasicColumnAccessor<String, Object>(
+						new StaticValueAccessor<String>(namedColumn.name(), String.class), accessor));
 			}
 			NumberedColumn numberedColumn = method.getAnnotation(NumberedColumn.class);
 			if (numberedColumn != null) {
 				makeAccessibleIfNot(method);
 				ReflectionMethodValueAccessor<Object> accessor = new ReflectionMethodValueAccessor<Object>(method);
-				valueAccessors.add(new BasicColumnAccessor<Long, Object>(numberedColumn.number(), Long.class, accessor));
+				valueAccessors.add(new BasicColumnAccessor<Long, Object>(
+						new StaticValueAccessor<Long>(numberedColumn.number(), Long.class), accessor));
 			}
 			if (method.getAnnotation(KeyColumn.class) != null) {
 				enforceSingleKeyColumn(meta);
@@ -75,7 +79,8 @@ public class AnnotationDrivenRowMapperMetaDataReader implements RowMapperMetaDat
 		}
 	}
 
-	private void generatePropertyGetters(Class<?> clazz, RowMapperMetaData meta, Set<ColumnAccessor<?, ?>> valueAccessors) {
+	private void generatePropertyGetters(Class<?> clazz, RowMapperMetaData meta,
+										 Set<ColumnAccessor<?, ?>> valueAccessors) {
 		Field[] fields = clazz.getDeclaredFields();
 		log.info("Inspecting " + fields.length + " for annotation " + NamedColumn.class.getCanonicalName());
 		for (Field field : fields) {
@@ -83,13 +88,15 @@ public class AnnotationDrivenRowMapperMetaDataReader implements RowMapperMetaDat
 			if (column != null) {
 				makeAccessibleIfNot(field);
 				ReflectionFieldValueAccessor<Object> accessor = new ReflectionFieldValueAccessor<Object>(field);
-				valueAccessors.add(new BasicColumnAccessor<String, Object>(column.name(), String.class, accessor));
+				valueAccessors.add(new BasicColumnAccessor<String, Object>(
+						new StaticValueAccessor<String>(column.name(), String.class), accessor));
 			}
 			NumberedColumn numberedColumn = field.getAnnotation(NumberedColumn.class);
 			if (numberedColumn != null) {
 				makeAccessibleIfNot(field);
 				ReflectionFieldValueAccessor<Object> accessor = new ReflectionFieldValueAccessor<Object>(field);
-				valueAccessors.add(new BasicColumnAccessor<Long, Object>(numberedColumn.number(), Long.class, accessor));
+				valueAccessors.add(new BasicColumnAccessor<Long, Object>(
+						new StaticValueAccessor<Long>(numberedColumn.number(), Long.class), accessor));
 			}
 			if (field.getAnnotation(KeyColumn.class) != null) {
 				enforceSingleKeyColumn(meta);

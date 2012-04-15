@@ -72,8 +72,8 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 		assertEquals(String.class, meta.getKeyValueAccessor().getValueType());
 		assertEquals(1, meta.getColumnAccessors().size());
 		ColumnAccessor getter = Iterables.getFirst(meta.getColumnAccessors(), null);
-		assertEquals("foo", getter.getColumnIdentifier());
-		assertEquals("fooBar", getter.getValue(bean));
+		assertEquals("foo", getter.getColumnIdentifier().getValue(bean));
+		assertEquals("fooBar", getter.getValueAccessor().getValue(bean));
 	}
 
 	@RowMapper(columnFamily = "dontCare")
@@ -92,9 +92,9 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 		bean.key = "fooBar";
 		assertEquals(1, meta.getColumnAccessors().size());
 		ColumnAccessor getter = Iterables.getFirst(meta.getColumnAccessors(), null);
-		assertEquals(Long.valueOf(10), getter.getColumnIdentifier());
-		assertEquals(Long.class, getter.getColumnIdentifierType());
-		assertEquals("fooBar", getter.getValue(bean));
+		assertEquals(Long.valueOf(10), getter.getColumnIdentifier().getValue(bean));
+		assertEquals(Long.class, getter.getColumnIdentifier().getValueType());
+		assertEquals("fooBar", getter.getValueAccessor().getValue(bean));
 	}
 
 	@RowMapper(columnFamily = "dontCare")
@@ -120,9 +120,9 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 		bean.setKey("fooBar");
 		assertEquals(1, meta.getColumnAccessors().size());
 		ColumnAccessor getter = Iterables.getFirst(meta.getColumnAccessors(), null);
-		assertEquals(Long.valueOf(10), getter.getColumnIdentifier());
-		assertEquals(Long.class, getter.getColumnIdentifierType());
-		assertEquals("fooBar", getter.getValue(bean));
+		assertEquals(Long.valueOf(10), getter.getColumnIdentifier().getValue(bean));
+		assertEquals(Long.class, getter.getColumnIdentifier().getValueType());
+		assertEquals("fooBar", getter.getValueAccessor().getValue(bean));
 	}
 
 
@@ -152,8 +152,8 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 		assertEquals("fooBar", meta.getKeyValueAccessor().getValue(bean));
 		assertEquals(String.class, meta.getKeyValueAccessor().getValueType());
 		ColumnAccessor getter = Iterables.getFirst(meta.getColumnAccessors(), null);
-		assertEquals("foo", getter.getColumnIdentifier());
-		assertEquals("fooBar", getter.getValue(bean));
+		assertEquals("foo", getter.getColumnIdentifier().getValue(bean));
+		assertEquals("fooBar", getter.getValueAccessor().getValue(bean));
 	}
 
 	@RowMapper(columnFamily = "testIng")
@@ -188,14 +188,14 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 		assertEquals(1, valueAccessors.size());
 		ColumnAccessor getter = Iterables.getFirst(valueAccessors, null);
 		assertNotNull(getter);
-		assertEquals("bar", getter.getColumnIdentifier());
-		assertEquals(String.class, getter.getValueType());
 
 		SomeBean source = new SomeBean();
 		source.setSomeProperty("notme");
 		source.setMethodProperty("fooBar!");
 
-		assertEquals("fooBar!", getter.getValue(source));
+		assertEquals("bar", getter.getColumnIdentifier().getValue(source));
+		assertEquals(String.class, getter.getValueAccessor().getValueType());
+		assertEquals("fooBar!", getter.getValueAccessor().getValue(source));
 	}
 
 	@Test
@@ -207,14 +207,14 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 		assertEquals(1, valueAccessors.size());
 		ColumnAccessor getter = Iterables.getFirst(valueAccessors, null);
 		assertNotNull(getter);
-		assertEquals("foo", getter.getColumnIdentifier());
-		assertEquals(String.class, getter.getValueType());
 
 		SomeBean source = new SomeBean();
 		source.setMethodProperty("notme");
 		source.setColumnProperty("fooBar!");
 
-		assertEquals("fooBar!", getter.getValue(source));
+		assertEquals("foo", getter.getColumnIdentifier().getValue(source));
+		assertEquals(String.class, getter.getValueAccessor().getValueType());
+		assertEquals("fooBar!", getter.getValueAccessor().getValue(source));
 	}
 
 }

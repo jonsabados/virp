@@ -1,11 +1,11 @@
 package com.jshnd.virp.reflection;
 
-import com.jshnd.virp.ValueAccessor;
+import com.jshnd.virp.BaseValueAccessor;
 import com.jshnd.virp.VirpException;
 
 import java.lang.reflect.Method;
 
-public class ReflectionMethodValueAccessor<T> implements ValueAccessor<T> {
+public class ReflectionMethodValueAccessor<T> extends BaseValueAccessor<T> {
 
 	private Method getterMethod;
 
