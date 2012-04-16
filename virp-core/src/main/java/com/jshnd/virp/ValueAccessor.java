@@ -6,8 +6,8 @@ public interface ValueAccessor<T> {
 
 	public Class<T> getValueType();
 
-	public Object getMeta();
+	public Object getActionFactoryMeta();
 
-	public void setMeta(Object meta);
+	public void setActionFactoryMeta(Object meta);
 
 }

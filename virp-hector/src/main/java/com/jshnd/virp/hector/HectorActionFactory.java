@@ -18,7 +18,7 @@ public class HectorActionFactory implements VirpActionFactory {
 	@Override
 	@SuppressWarnings("unchecked")
 	public VirpAction newAction(RowMapperMetaData meta) {
-		Mutator mutator = HFactory.createMutator(keyspace, (Serializer) meta.getKeyValueAccessor().getMeta());
+		Mutator mutator = HFactory.createMutator(keyspace, (Serializer) meta.getKeyValueAccessor().getActionFactoryMeta());
 		return new HectorAction(mutator);
 	}
 
@@ -37,19 +37,19 @@ public class HectorActionFactory implements VirpActionFactory {
 			setupPrimitive(accessor, type);
 		} else {
 			if (type.isAssignableFrom(String.class)) {
-				accessor.setMeta(StringSerializer.get());
+				accessor.setActionFactoryMeta(StringSerializer.get());
 			} else if (type.isAssignableFrom(Integer.class)) {
-				accessor.setMeta(IntegerSerializer.get());
+				accessor.setActionFactoryMeta(IntegerSerializer.get());
 			} else if (type.isAssignableFrom(Long.class)) {
-				accessor.setMeta(LongSerializer.get());
+				accessor.setActionFactoryMeta(LongSerializer.get());
 			} else if (type.isAssignableFrom(Float.class)) {
-				accessor.setMeta(FloatSerializer.get());
+				accessor.setActionFactoryMeta(FloatSerializer.get());
 			} else if (type.isAssignableFrom(Double.class)) {
-				accessor.setMeta(DoubleSerializer.get());
+				accessor.setActionFactoryMeta(DoubleSerializer.get());
 			} else if (type.isAssignableFrom(ShortSerializer.class)) {
-				accessor.setMeta(ShortSerializer.get());
+				accessor.setActionFactoryMeta(ShortSerializer.get());
 			} else if (type.isAssignableFrom(Boolean.class)) {
-				accessor.setMeta(BooleanSerializer.get());
+				accessor.setActionFactoryMeta(BooleanSerializer.get());
 			} else {
 				throw new VirpHectorException("Unable to deal with " + type.getCanonicalName() +
 						", serializer needs setup.");
@@ -59,21 +59,21 @@ public class HectorActionFactory implements VirpActionFactory {
 
 	private void setupPrimitive(ValueAccessor<?> accessor, Class<?> type) {
 		if (type.equals(long.class)) {
-			accessor.setMeta(LongSerializer.class);
+			accessor.setActionFactoryMeta(LongSerializer.get());
 		} else if (type.equals(int.class)) {
-			accessor.setMeta(IntegerSerializer.class);
+			accessor.setActionFactoryMeta(IntegerSerializer.get());
 		} else if (type.equals(short.class)) {
-			accessor.setMeta(ShortSerializer.class);
+			accessor.setActionFactoryMeta(ShortSerializer.get());
 		} else if (type.equals(byte.class)) {
-			accessor.setMeta(new ByteSerializer());
+			accessor.setActionFactoryMeta(ByteSerializer.get());
 		} else if (type.equals(float.class)) {
-			accessor.setMeta(FloatSerializer.class);
+			accessor.setActionFactoryMeta(FloatSerializer.get());
 		} else if (type.equals(double.class)) {
-			accessor.setMeta(DoubleSerializer.class);
+			accessor.setActionFactoryMeta(DoubleSerializer.get());
 		} else if (type.equals(boolean.class)) {
-			accessor.setMeta(BooleanSerializer.class);
+			accessor.setActionFactoryMeta(BooleanSerializer.get());
 		} else if (type.equals(char.class)) {
-			accessor.setMeta(new CharSerializer());
+			accessor.setActionFactoryMeta(CharSerializer.get());
 		}
 	}
 

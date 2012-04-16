@@ -33,9 +33,9 @@ public class HectorActionFactoryTest {
 				new BasicColumnAccessor<String, String>(accessor2, accessor3);
 		type.setColumnAccessors(Sets.<ColumnAccessor<?,?>>newHashSet(columnAccessor));
 		testObj.setupClass(type);
-		assertSame(StringSerializer.get(), accessor1.getMeta());
-		assertSame(StringSerializer.get(), accessor2.getMeta());
-		assertSame(StringSerializer.get(), accessor3.getMeta());
+		assertSame(StringSerializer.get(), accessor1.getActionFactoryMeta());
+		assertSame(StringSerializer.get(), accessor2.getActionFactoryMeta());
+		assertSame(StringSerializer.get(), accessor3.getActionFactoryMeta());
 	}
 
 	@Test
@@ -49,9 +49,9 @@ public class HectorActionFactoryTest {
 				new BasicColumnAccessor<Long, Long>(accessor2, accessor3);
 		type.setColumnAccessors(Sets.<ColumnAccessor<?,?>>newHashSet(columnAccessor));
 		testObj.setupClass(type);
-		assertSame(LongSerializer.get(), accessor1.getMeta());
-		assertSame(LongSerializer.get(), accessor2.getMeta());
-		assertSame(LongSerializer.get(), accessor3.getMeta());
+		assertSame(LongSerializer.get(), accessor1.getActionFactoryMeta());
+		assertSame(LongSerializer.get(), accessor2.getActionFactoryMeta());
+		assertSame(LongSerializer.get(), accessor3.getActionFactoryMeta());
 	}
 
 	@Test
@@ -65,9 +65,9 @@ public class HectorActionFactoryTest {
 				new BasicColumnAccessor<Long, Long>(accessor2, accessor3);
 		type.setColumnAccessors(Sets.<ColumnAccessor<?,?>>newHashSet(columnAccessor));
 		testObj.setupClass(type);
-		assertSame(LongSerializer.get(), accessor1.getMeta());
-		assertSame(LongSerializer.get(), accessor2.getMeta());
-		assertSame(LongSerializer.get(), accessor3.getMeta());
+		assertSame(LongSerializer.get(), accessor1.getActionFactoryMeta());
+		assertSame(LongSerializer.get(), accessor2.getActionFactoryMeta());
+		assertSame(LongSerializer.get(), accessor3.getActionFactoryMeta());
 	}
 
 }

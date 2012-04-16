@@ -6,6 +6,12 @@ import java.nio.ByteBuffer;
 
 public class ByteSerializer extends AbstractSerializer<Byte> {
 
+	private static final ByteSerializer instance = new ByteSerializer();
+
+	public static ByteSerializer get() {
+		return instance;
+	}
+
 	@Override
 	public ByteBuffer toByteBuffer(Byte obj) {
 		if(obj == null) {

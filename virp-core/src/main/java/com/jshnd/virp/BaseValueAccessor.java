@@ -5,12 +5,12 @@ public abstract class BaseValueAccessor<T> implements  ValueAccessor<T> {
 	private Object meta;
 
 	@Override
-	public Object getMeta() {
+	public Object getActionFactoryMeta() {
 		return meta;
 	}
 
 	@Override
-	public void setMeta(Object meta) {
+	public void setActionFactoryMeta(Object meta) {
 		this.meta = meta;
 	}
 }
