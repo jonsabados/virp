@@ -1,6 +1,6 @@
 package com.jshnd.virp.hector;
 
-import com.jshnd.virp.VirpException;
+import com.jshnd.virp.exception.VirpException;
 
 public class VirpHectorException extends VirpException {
 

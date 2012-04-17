@@ -1,7 +1,7 @@
 package com.jshnd.virp.reflection;
 
 import com.jshnd.virp.BaseValueAccessor;
-import com.jshnd.virp.VirpException;
+import com.jshnd.virp.exception.VirpException;
 
 import java.lang.reflect.Field;
 

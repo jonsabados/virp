@@ -1,138 +1,76 @@
 package com.jshnd.virp;
 
-import com.google.common.collect.Sets;
 import com.jshnd.virp.config.RowMapperMetaData;
-import com.jshnd.virp.config.RowMapperMetaDataReader;
-import com.jshnd.virp.config.RowMapperSource;
-import com.jshnd.virp.config.dummyclasses.mapped.SomeClass;
-import com.jshnd.virp.config.dummyclasses.mappedsubpackage.subpackage.MappedSubclass;
-import org.easymock.EasyMock;
+import com.jshnd.virp.exception.VirpOperationException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.util.Map;
-import java.util.Set;
+import java.math.BigDecimal;
 
-import static org.easymock.EasyMock.*;
-import static org.junit.Assert.assertEquals;
+import static org.easymock.EasyMock.createMock;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.replay;
+import static org.junit.Assert.assertTrue;
 
 public class VirpSessionTest {
 
-	private VirpSession testObj;
+	private static class TestSession extends VirpSession {
 
-	private RowMapperSource rowMapperSource;
+		boolean saveDone = false;
 
-	private RowMapperMetaDataReader metaReader;
+		boolean closed = false;
 
-	private VirpActionFactory actionFactory;
+		TestSession(RowMapperMetaData metaData) {
+			super(metaData);
+		}
+
+		@Override
+		protected void doSave(Object row) {
+			saveDone = true;
+		}
+
+		@Override
+		protected VirpActionResult doClose() {
+			closed = true;
+			return createMock(VirpActionResult.class);
+		}
+	}
+
+	private TestSession testObj;
+
+	private RowMapperMetaData meta;
 
 	@Rule
 	public ExpectedException expectedException = ExpectedException.none();
 
 	@Before
 	public void setup() {
-		testObj = new VirpSession();
-		rowMapperSource = createMock(RowMapperSource.class);
-		metaReader = EasyMock.createMock(RowMapperMetaDataReader.class);
-		actionFactory = EasyMock.createMock(VirpActionFactory.class);
-		testObj.setRowMapperSource(rowMapperSource);
-		testObj.setMetaDataReader(metaReader);
-		testObj.setActionFactory(actionFactory);
+		meta = createMock(RowMapperMetaData.class);
+		testObj = new TestSession(meta);
 	}
 
 	@Test
-	public void testWriteRowNotInitialized() {
-		expectedException.expect(VirpException.class);
-		expectedException.expectMessage("Session has not been initialized - call init() first.");
+	public void testSaveUnknownClass() {
+		expectedException.expect(VirpOperationException.class);
+		expectedException.expectMessage("May only operate on objects of type java.math.BigDecimal");
 
-		testObj.writeRow(new SomeClass());
+		expect(meta.getRowMapperClass()).andReturn((Class) BigDecimal.class).anyTimes();
+		replay(meta);
+
+		testObj.save(Integer.valueOf(20));
 	}
 
 	@Test
-	public void testWriteRowUnconfigured() {
-		expectedException.expect(VirpException.class);
-		expectedException.expectMessage(Integer.class.getCanonicalName() + " has not been configured");
-		Set<Class<?>> classes = Sets.<Class<?>>newHashSet(MappedSubclass.class, SomeClass.class);
-		expect(rowMapperSource.getRowMapperClasses()).andReturn(classes).once();
-		RowMapperMetaData one = new RowMapperMetaData(MappedSubclass.class);
-		RowMapperMetaData two = new RowMapperMetaData(SomeClass.class);
-		expect(metaReader.readClass(MappedSubclass.class)).andReturn(one).once();
-		expect(metaReader.readClass(SomeClass.class)).andReturn(two).once();
-		replay(rowMapperSource, metaReader);
+	public void testClose() {
+		expectedException.expect(VirpOperationException.class);
+		expectedException.expectMessage("Session has been closed");
 
-		testObj.init();
-		testObj.writeRow(Integer.valueOf(10));
-	}
-
-	@Test
-	public void testWriteRow() {
-		Set<Class<?>> classes = Sets.<Class<?>>newHashSet(MappedSubclass.class, SomeClass.class);
-		expect(rowMapperSource.getRowMapperClasses()).andReturn(classes).once();
-		RowMapperMetaData one = new RowMapperMetaData(MappedSubclass.class);
-		RowMapperMetaData two = new RowMapperMetaData(SomeClass.class);
-		expect(metaReader.readClass(MappedSubclass.class)).andReturn(one).once();
-		expect(metaReader.readClass(SomeClass.class)).andReturn(two).once();
-		actionFactory.setupClass(one);
-		expectLastCall();
-		actionFactory.setupClass(two);
-		expectLastCall();
-
-		SomeClass toWrite = new SomeClass();
-		VirpAction writer = EasyMock.createMock(VirpAction.class);
-		VirpActionResult result = EasyMock.createMock(VirpActionResult.class);
-		expect(actionFactory.newAction(two)).andReturn(writer).once();
-
-		writer.writeRow(toWrite, two);
-		expectLastCall().once();
-		expect(writer.complete()).andReturn(result).once();
-
-		replay(rowMapperSource, metaReader, actionFactory, writer, result);
-		testObj.init();
-
-		assertEquals(result, testObj.writeRow(toWrite));
-		verify(writer, actionFactory, result);
-	}
-
-	@Test
-	public void testInit() {
-		Set<Class<?>> classes = Sets.<Class<?>>newHashSet(MappedSubclass.class, SomeClass.class);
-		expect(rowMapperSource.getRowMapperClasses()).andReturn(classes).once();
-		RowMapperMetaData one = new RowMapperMetaData(MappedSubclass.class);
-		RowMapperMetaData two = new RowMapperMetaData(SomeClass.class);
-		expect(metaReader.readClass(MappedSubclass.class)).andReturn(one).once();
-		expect(metaReader.readClass(SomeClass.class)).andReturn(two).once();
-		actionFactory.setupClass(one);
-		expectLastCall();
-		actionFactory.setupClass(two);
-		expectLastCall();
-		replay(rowMapperSource, metaReader, actionFactory);
-
-		testObj.init();
-		Map<Class<?>, RowMapperMetaData> result = testObj.getConfiguredClasses();
-
-		assertEquals(2, result.size());
-		assertEquals(one, result.get(MappedSubclass.class));
-		assertEquals(two, result.get(SomeClass.class));
-
-		verify(rowMapperSource, metaReader, actionFactory);
-	}
-
-	@Test
-	public void testDuplicateInit() {
-		expectedException.expect(VirpException.class);
-		expectedException.expectMessage("Already initialized");
-		Set<Class<?>> classes = Sets.<Class<?>>newHashSet(MappedSubclass.class, SomeClass.class);
-		expect(rowMapperSource.getRowMapperClasses()).andReturn(classes).once();
-		RowMapperMetaData one = new RowMapperMetaData(MappedSubclass.class);
-		RowMapperMetaData two = new RowMapperMetaData(SomeClass.class);
-		expect(metaReader.readClass(MappedSubclass.class)).andReturn(one).once();
-		expect(metaReader.readClass(SomeClass.class)).andReturn(two).once();
-		replay(rowMapperSource, metaReader);
-
-		testObj.init();
-		testObj.init();
+		replay(meta);
+		testObj.close();
+		assertTrue(testObj.closed);
+		testObj.close();
 	}
 
 }

@@ -1,4 +1,4 @@
-package com.jshnd.virp;
+package com.jshnd.virp.exception;
 
 public class VirpException extends RuntimeException {
 

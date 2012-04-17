@@ -15,11 +15,11 @@ import static org.junit.Assert.assertSame;
 
 public class HectorActionFactoryTest {
 
-	private HectorActionFactory testObj;
+	private HectorSessionFactory testObj;
 
 	@Before
 	public void setup() {
-		testObj = new HectorActionFactory();
+		testObj = new HectorSessionFactory();
 	}
 
 	@Test

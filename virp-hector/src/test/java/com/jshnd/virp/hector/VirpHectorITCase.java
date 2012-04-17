@@ -1,6 +1,7 @@
 package com.jshnd.virp.hector;
 
 import com.google.common.collect.Sets;
+import com.jshnd.virp.VirpConfig;
 import com.jshnd.virp.VirpSession;
 import com.jshnd.virp.annotation.*;
 import com.jshnd.virp.config.ConfiguredRowMapperSource;
@@ -36,7 +37,7 @@ public class VirpHectorITCase {
 
 	private static Keyspace testKeyspace;
 
-	private VirpSession session;
+	private VirpConfig config;
 
 	@BeforeClass
 	public static void startupEmbeddedCluster() throws Exception {
@@ -58,8 +59,8 @@ public class VirpHectorITCase {
 
 	@Before
 	public void setup() {
-		session = new VirpSession();
-		session.setMetaDataReader(new AnnotationDrivenRowMapperMetaDataReader());
+		config = new VirpConfig();
+		config.setMetaDataReader(new AnnotationDrivenRowMapperMetaDataReader());
 	}
 
 	@RowMapper(columnFamily = "BasicSaveObject")
@@ -91,18 +92,21 @@ public class VirpHectorITCase {
 
 		ConfiguredRowMapperSource source = new ConfiguredRowMapperSource();
 		source.setRowMapperClasses(Sets.<Class<?>>newHashSet(BasicSaveObject.class));
-		session.setRowMapperSource(source);
-		HectorActionFactory actionFactory = new HectorActionFactory();
+		config.setRowMapperSource(source);
+		HectorSessionFactory actionFactory = new HectorSessionFactory();
 		actionFactory.setKeyspace(testKeyspace);
-		session.setActionFactory(actionFactory);
-		session.init();
+		config.setSessionFactory(actionFactory);
+		config.init();
 
 		BasicSaveObject row = new BasicSaveObject();
 		row.key = "bob";
 		row.columnOne = "valueForColumnOne";
 		row.columnTwo = "valueForColumnTwo";
 		row.columnTen = 20;
-		session.writeRow(row);
+
+		VirpSession session = config.newSession(BasicSaveObject.class);
+		session.save(row);
+		session.close();
 
 		Serializer stringSerializer = StringSerializer.get();
 		SliceQuery<String, String, String> query =

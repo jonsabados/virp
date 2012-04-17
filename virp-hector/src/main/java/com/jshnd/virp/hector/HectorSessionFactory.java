@@ -2,8 +2,7 @@ package com.jshnd.virp.hector;
 
 import com.jshnd.virp.ColumnAccessor;
 import com.jshnd.virp.ValueAccessor;
-import com.jshnd.virp.VirpAction;
-import com.jshnd.virp.VirpActionFactory;
+import com.jshnd.virp.VirpSessionFactory;
 import com.jshnd.virp.config.RowMapperMetaData;
 import me.prettyprint.cassandra.serializers.*;
 import me.prettyprint.hector.api.Keyspace;
@@ -11,15 +10,16 @@ import me.prettyprint.hector.api.Serializer;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.Mutator;
 
-public class HectorActionFactory implements VirpActionFactory {
+public class HectorSessionFactory implements VirpSessionFactory {
 
 	private Keyspace keyspace;
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public VirpAction newAction(RowMapperMetaData meta) {
-		Mutator mutator = HFactory.createMutator(keyspace, (Serializer) meta.getKeyValueAccessor().getActionFactoryMeta());
-		return new HectorAction(mutator);
+	public HectorSession newSession(RowMapperMetaData meta) {
+		Mutator mutator = HFactory.createMutator(keyspace,
+				(Serializer) meta.getKeyValueAccessor().getActionFactoryMeta());
+		return new HectorSession(meta, mutator);
 	}
 
 	@Override

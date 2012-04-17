@@ -2,9 +2,9 @@ package com.jshnd.virp;
 
 import com.jshnd.virp.config.RowMapperMetaData;
 
-public interface VirpActionFactory {
+public interface VirpSessionFactory {
 
-	public VirpAction newAction(RowMapperMetaData forType);
+	public VirpSession newSession(RowMapperMetaData forType);
 
 	public void setupClass(RowMapperMetaData type);
 

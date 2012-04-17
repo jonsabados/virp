@@ -2,7 +2,8 @@ package com.jshnd.virp.annotation;
 
 import com.google.common.collect.Iterables;
 import com.jshnd.virp.ColumnAccessor;
-import com.jshnd.virp.VirpException;
+import com.jshnd.virp.exception.VirpAnnotationException;
+import com.jshnd.virp.exception.VirpException;
 import com.jshnd.virp.config.RowMapperMetaData;
 import com.jshnd.virp.reflection.SomeBean;
 import org.junit.Before;

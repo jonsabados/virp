@@ -1,6 +1,6 @@
-package com.jshnd.virp.annotation;
+package com.jshnd.virp.exception;
 
-import com.jshnd.virp.VirpException;
+import com.jshnd.virp.exception.VirpException;
 
 public class VirpAnnotationException extends VirpException {
 
