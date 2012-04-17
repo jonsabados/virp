@@ -10,13 +10,15 @@ import me.prettyprint.hector.api.Serializer;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.Mutator;
 
+import java.util.Set;
+
 public class HectorSessionFactory implements VirpSessionFactory {
 
 	private Keyspace keyspace;
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public HectorSession newSession(RowMapperMetaData meta) {
+	public <T> HectorSession<T, ?> newSession(RowMapperMetaData<T> meta) {
 		Mutator mutator = HFactory.createMutator(keyspace,
 				(Serializer) meta.getKeyValueAccessor().getActionFactoryMeta());
 		return new HectorSession(meta, mutator);
@@ -25,7 +27,8 @@ public class HectorSessionFactory implements VirpSessionFactory {
 	@Override
 	public void setupClass(RowMapperMetaData type) {
 		setupSerializer(type.getKeyValueAccessor());
-		for (ColumnAccessor<?, ?> accessor : type.getColumnAccessors()) {
+		Set<ColumnAccessor<?,?>> accessors = type.getColumnAccessors();
+		for (ColumnAccessor<?, ?> accessor : accessors) {
 			setupSerializer(accessor.getValueAccessor());
 			setupSerializer(accessor.getColumnIdentifier());
 		}

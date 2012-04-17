@@ -6,9 +6,9 @@ import com.jshnd.virp.ValueAccessor;
 import java.util.Collections;
 import java.util.Set;
 
-public class RowMapperMetaData {
+public class RowMapperMetaData<T> {
 
-	private Class<?> rowMapperClass;
+	private Class<T> rowMapperClass;
 
 	private String columnFamily;
 
@@ -16,12 +16,12 @@ public class RowMapperMetaData {
 
 	private Set<ColumnAccessor<?, ?>> columnAccessors;
 
-	public RowMapperMetaData(Class<?> rowMapperClass) {
+	public RowMapperMetaData(Class<T> rowMapperClass) {
 		super();
 		this.rowMapperClass = rowMapperClass;
 	}
 
-	public Class<?> getRowMapperClass() {
+	public Class<T> getRowMapperClass() {
 		return rowMapperClass;
 	}
 

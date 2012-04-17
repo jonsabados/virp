@@ -65,7 +65,7 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 
 	@Test
 	public void testPropertyKeyKeyColumn() {
-		RowMapperMetaData meta = testObj.readClass(OkPropertyKeyTester.class);
+		RowMapperMetaData<OkPropertyKeyTester> meta = testObj.readClass(OkPropertyKeyTester.class);
 		assertNotNull(meta.getKeyValueAccessor());
 		OkPropertyKeyTester bean = new OkPropertyKeyTester();
 		bean.key = "fooBar";
@@ -88,7 +88,7 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 
 	@Test
 	public void testNumberedProperty() {
-		RowMapperMetaData meta = testObj.readClass(NumberedColumnPropertyTester.class);
+		RowMapperMetaData<NumberedColumnPropertyTester> meta = testObj.readClass(NumberedColumnPropertyTester.class);
 		NumberedColumnPropertyTester bean = new NumberedColumnPropertyTester();
 		bean.key = "fooBar";
 		assertEquals(1, meta.getColumnAccessors().size());
@@ -116,7 +116,7 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 
 	@Test
 	public void testNumberedMethod() {
-		RowMapperMetaData meta = testObj.readClass(NumberedColumnMethodTester.class);
+		RowMapperMetaData<NumberedColumnMethodTester> meta = testObj.readClass(NumberedColumnMethodTester.class);
 		NumberedColumnMethodTester bean = new NumberedColumnMethodTester();
 		bean.setKey("fooBar");
 		assertEquals(1, meta.getColumnAccessors().size());
@@ -146,7 +146,7 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 
 	@Test
 	public void testMethodKeyKeyColumn() {
-		RowMapperMetaData meta = testObj.readClass(OkMethodKeyTester.class);
+		RowMapperMetaData<OkMethodKeyTester> meta = testObj.readClass(OkMethodKeyTester.class);
 		assertNotNull(meta.getKeyValueAccessor());
 		OkMethodKeyTester bean = new OkMethodKeyTester();
 		bean.setKey("fooBar");

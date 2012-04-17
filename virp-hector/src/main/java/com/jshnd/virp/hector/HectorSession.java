@@ -13,13 +13,15 @@ import me.prettyprint.hector.api.mutation.Mutator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class HectorSession<T> extends VirpSession {
+import java.util.Set;
+
+public class HectorSession<V, T> extends VirpSession<V> {
 
 	private static final Logger log = LoggerFactory.getLogger(HectorSession.class);
 
 	private Mutator<T> mutator;
 
-	public HectorSession(RowMapperMetaData rowMeta, Mutator<T> mutator) {
+	public HectorSession(RowMapperMetaData<V> rowMeta, Mutator<T> mutator) {
 		super(rowMeta);
 		this.mutator = mutator;
 	}
@@ -29,7 +31,8 @@ public class HectorSession<T> extends VirpSession {
 		String columnFamily = rowMeta.getColumnFamily();
 		ValueAccessor<T> keyAccessor = (ValueAccessor<T>) rowMeta.getKeyValueAccessor();
 		T key = keyAccessor.getValue(row);
-		for(ColumnAccessor accessor : rowMeta.getColumnAccessors()) {
+		Set<ColumnAccessor<?,?>> accessors = rowMeta.getColumnAccessors();
+		for(ColumnAccessor<?, ?> accessor : accessors) {
 			ValueAccessor identifier = accessor.getColumnIdentifier();
 			ValueAccessor value = accessor.getValueAccessor();
 			HColumn hcolumn = HFactory.createColumn(identifier.getValue(row), value.getValue(row),

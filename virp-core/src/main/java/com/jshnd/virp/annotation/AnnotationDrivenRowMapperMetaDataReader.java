@@ -27,7 +27,7 @@ public class AnnotationDrivenRowMapperMetaDataReader implements RowMapperMetaDat
 	private boolean readMethods = true;
 
 	@Override
-	public RowMapperMetaData readClass(Class<?> clazz) {
+	public <T> RowMapperMetaData<T> readClass(Class<T> clazz) {
 		RowMapperMetaData ret = new RowMapperMetaData(clazz);
 		RowMapper mapperAnnotation = clazz.getAnnotation(RowMapper.class);
 		if (null == mapperAnnotation) {

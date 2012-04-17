@@ -7,22 +7,18 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.math.BigDecimal;
-
 import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.replay;
 import static org.junit.Assert.assertTrue;
 
 public class VirpSessionTest {
 
-	private static class TestSession extends VirpSession {
+	private static class TestSession extends VirpSession<Object> {
 
 		boolean saveDone = false;
 
 		boolean closed = false;
 
-		TestSession(RowMapperMetaData metaData) {
+		TestSession(RowMapperMetaData<Object> metaData) {
 			super(metaData);
 		}
 
@@ -40,26 +36,26 @@ public class VirpSessionTest {
 
 	private TestSession testObj;
 
-	private RowMapperMetaData meta;
+	private RowMapperMetaData<Object> meta;
 
 	@Rule
 	public ExpectedException expectedException = ExpectedException.none();
 
 	@Before
 	public void setup() {
-		meta = createMock(RowMapperMetaData.class);
+		meta = new RowMapperMetaData<Object>(Object.class);
 		testObj = new TestSession(meta);
 	}
 
 	@Test
-	public void testSaveUnknownClass() {
+	public void testSave() {
 		expectedException.expect(VirpOperationException.class);
-		expectedException.expectMessage("May only operate on objects of type java.math.BigDecimal");
-
-		expect(meta.getRowMapperClass()).andReturn((Class) BigDecimal.class).anyTimes();
-		replay(meta);
+		expectedException.expectMessage("Session has been closed");
 
 		testObj.save(Integer.valueOf(20));
+		assertTrue(testObj.saveDone);
+		testObj.close();
+		testObj.save(Integer.valueOf(21));
 	}
 
 	@Test
@@ -67,7 +63,6 @@ public class VirpSessionTest {
 		expectedException.expect(VirpOperationException.class);
 		expectedException.expectMessage("Session has been closed");
 
-		replay(meta);
 		testObj.close();
 		assertTrue(testObj.closed);
 		testObj.close();
