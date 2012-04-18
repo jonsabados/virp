@@ -11,10 +11,13 @@ public class ReflectionMethodValueAccessorTest {
 	@Test
 	public void testGetColumnValue() throws SecurityException, NoSuchMethodException {
 		Method method = SomeBean.class.getMethod("getSomeProperty");
-		ReflectionMethodValueAccessor valueAccessorReflection = new ReflectionMethodValueAccessor(method);
+		Method setter = SomeBean.class.getMethod("setSomeProperty", String.class);
+		ReflectionMethodValueAccessor valueAccessorReflection = new ReflectionMethodValueAccessor(method, setter);
 		SomeBean bean = new SomeBean();
 		bean.setSomeProperty("foo");
 		assertEquals("foo", valueAccessorReflection.getValue(bean));
+		valueAccessorReflection.setValue(bean, "foo2");
+		assertEquals("foo2", valueAccessorReflection.getValue(bean));
 	}
 
 }

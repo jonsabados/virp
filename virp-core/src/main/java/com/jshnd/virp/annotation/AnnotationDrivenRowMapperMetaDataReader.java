@@ -52,25 +52,46 @@ public class AnnotationDrivenRowMapperMetaDataReader implements RowMapperMetaDat
 		log.info("Inspecting " + methods.length + " for annotation " + NamedColumn.class.getCanonicalName());
 		for (Method method : methods) {
 			NamedColumn namedColumn = method.getAnnotation(NamedColumn.class);
-			if (namedColumn != null) {
-				makeAccessibleIfNot(method);
-				ReflectionMethodValueAccessor<Object> accessor = new ReflectionMethodValueAccessor<Object>(method);
-				valueAccessors.add(new BasicColumnAccessor<String, Object>(
-						new StaticValueAccessor<String>(namedColumn.name(), String.class), accessor));
-			}
 			NumberedColumn numberedColumn = method.getAnnotation(NumberedColumn.class);
-			if (numberedColumn != null) {
+			KeyColumn keyColumn = method.getAnnotation(KeyColumn.class);
+			if (namedColumn != null || numberedColumn != null || keyColumn != null) {
+				Method setter = getSetter(clazz, method);
 				makeAccessibleIfNot(method);
-				ReflectionMethodValueAccessor<Object> accessor = new ReflectionMethodValueAccessor<Object>(method);
-				valueAccessors.add(new BasicColumnAccessor<Long, Object>(
-						new StaticValueAccessor<Long>(Long.valueOf(numberedColumn.number()), Long.class), accessor));
+				makeAccessibleIfNot(setter);
+				ReflectionMethodValueAccessor<Object> accessor =
+						new ReflectionMethodValueAccessor<Object>(method, setter);
+				if (namedColumn != null) {
+					valueAccessors.add(new BasicColumnAccessor<String, Object>(
+							new StaticValueAccessor<String>(namedColumn.name(), String.class), accessor));
+				}
+				if (numberedColumn != null) {
+					valueAccessors.add(new BasicColumnAccessor<Long, Object>(
+							new StaticValueAccessor<Long>(Long.valueOf(numberedColumn.number()), Long.class), accessor));
+				}
+				if (keyColumn != null) {
+					enforceSingleKeyColumn(meta);
+					meta.setKeyValueAccessor(accessor);
+				}
 			}
-			if (method.getAnnotation(KeyColumn.class) != null) {
-				enforceSingleKeyColumn(meta);
-				makeAccessibleIfNot(method);
-				ReflectionMethodValueAccessor accessor = new ReflectionMethodValueAccessor(method);
-				meta.setKeyValueAccessor(accessor);
-			}
+		}
+	}
+
+	private Method getSetter(Class<?> clazz, Method getter) {
+		String name = getter.getName();
+		if(!name.startsWith("get") && !name.startsWith("is")) {
+			throw new VirpAnnotationException(name + " for " + clazz.getCanonicalName() + " is not a getter");
+		}
+		String setterName;
+		if(name.startsWith("get")) {
+			setterName = name.replaceFirst("get", "set");
+		} else {
+			setterName = name.replaceFirst("is", "set");
+		}
+		try {
+			return clazz.getDeclaredMethod(setterName, getter.getReturnType());
+		} catch (Exception e) {
+			throw new VirpAnnotationException("setter for getter " + name + " not found on class "
+					+ clazz.getCanonicalName());
 		}
 	}
 

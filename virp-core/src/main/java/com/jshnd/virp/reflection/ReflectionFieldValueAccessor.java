@@ -1,11 +1,11 @@
 package com.jshnd.virp.reflection;
 
-import com.jshnd.virp.BaseValueAccessor;
+import com.jshnd.virp.BaseValueManipulator;
 import com.jshnd.virp.exception.VirpException;
 
 import java.lang.reflect.Field;
 
-public class ReflectionFieldValueAccessor<T> extends BaseValueAccessor<T> {
+public class ReflectionFieldValueAccessor<T> extends BaseValueManipulator<T> {
 
 	private Field field;
 
@@ -18,6 +18,15 @@ public class ReflectionFieldValueAccessor<T> extends BaseValueAccessor<T> {
 		try {
 			return (T) field.get(sourceObject);
 		} catch (Exception e) {
+			throw new VirpException(e);
+		}
+	}
+
+	@Override
+	public void setValue(Object sourceObject, T value) {
+		try {
+			field.set(sourceObject, value);
+		} catch(Exception e) {
 			throw new VirpException(e);
 		}
 	}

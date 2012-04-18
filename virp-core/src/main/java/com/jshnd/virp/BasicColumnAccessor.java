@@ -4,9 +4,9 @@ public class BasicColumnAccessor<T, V> implements ColumnAccessor<T, V> {
 
 	private ValueAccessor<T> columnIdentifier;
 
-	private ValueAccessor<V> valueAccessor;
+	private ValueManipulator<V> valueAccessor;
 
-	public BasicColumnAccessor(ValueAccessor<T> columnIdentifier, ValueAccessor<V> valueAccessor) {
+	public BasicColumnAccessor(ValueAccessor<T> columnIdentifier, ValueManipulator<V> valueAccessor) {
 		this.columnIdentifier = columnIdentifier;
 		this.valueAccessor = valueAccessor;
 	}
@@ -17,7 +17,7 @@ public class BasicColumnAccessor<T, V> implements ColumnAccessor<T, V> {
 	}
 
 	@Override
-	public ValueAccessor<V> getValueAccessor() {
+	public ValueManipulator<V> getValueManipulator() {
 		return valueAccessor;
 	}
 

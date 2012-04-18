@@ -30,7 +30,7 @@ public class VirpConfig {
 		if(!initialized) {
 			throw new VirpException("Session has not been initialized - call init() first.");
 		}
-		RowMapperMetaData meta = configuredClasses.get(classFor);
+		RowMapperMetaData<?> meta = configuredClasses.get(classFor);
 		if(meta == null) {
 			throw new VirpException(classFor.getCanonicalName() + " has not been configured");
 		}

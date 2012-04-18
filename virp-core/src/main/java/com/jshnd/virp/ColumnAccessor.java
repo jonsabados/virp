@@ -4,6 +4,6 @@ public interface ColumnAccessor<T, V> {
 
 	public ValueAccessor<T> getColumnIdentifier();
 
-	public ValueAccessor<V> getValueAccessor();
+	public ValueManipulator<V> getValueManipulator();
 
 }

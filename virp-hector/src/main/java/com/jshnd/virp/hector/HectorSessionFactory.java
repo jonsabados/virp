@@ -10,26 +10,23 @@ import me.prettyprint.hector.api.Serializer;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.Mutator;
 
-import java.util.Set;
-
 public class HectorSessionFactory implements VirpSessionFactory {
 
 	private Keyspace keyspace;
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> HectorSession<T, ?> newSession(RowMapperMetaData<T> meta) {
+	public <T> HectorSession<T> newSession(RowMapperMetaData<T> meta) {
 		Mutator mutator = HFactory.createMutator(keyspace,
 				(Serializer) meta.getKeyValueAccessor().getActionFactoryMeta());
 		return new HectorSession(meta, mutator);
 	}
 
 	@Override
-	public void setupClass(RowMapperMetaData type) {
+	public void setupClass(RowMapperMetaData<?> type) {
 		setupSerializer(type.getKeyValueAccessor());
-		Set<ColumnAccessor<?,?>> accessors = type.getColumnAccessors();
-		for (ColumnAccessor<?, ?> accessor : accessors) {
-			setupSerializer(accessor.getValueAccessor());
+		for (ColumnAccessor<?, ?> accessor : type.getColumnAccessors()) {
+			setupSerializer(accessor.getValueManipulator());
 			setupSerializer(accessor.getColumnIdentifier());
 		}
 	}

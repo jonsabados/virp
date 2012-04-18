@@ -55,10 +55,10 @@ public class VirpConfigTest {
 	public void testNewSessionUnknownClass() {
 		expectedException.expect(VirpException.class);
 		expectedException.expectMessage(Integer.class.getCanonicalName() + " has not been configured");
-		Set<Class<?>> classes = Sets.<Class<?>>newHashSet(MappedSubclass.class, SomeClass.class);
+		Set<Class<?>> classes = Sets.newHashSet(MappedSubclass.class, SomeClass.class);
 		expect(rowMapperSource.getRowMapperClasses()).andReturn(classes).once();
-		RowMapperMetaData one = new RowMapperMetaData(MappedSubclass.class);
-		RowMapperMetaData two = new RowMapperMetaData(SomeClass.class);
+		RowMapperMetaData<MappedSubclass> one = new RowMapperMetaData<MappedSubclass>(MappedSubclass.class);
+		RowMapperMetaData<SomeClass> two = new RowMapperMetaData<SomeClass>(SomeClass.class);
 		expect(metaReader.readClass(MappedSubclass.class)).andReturn(one).once();
 		expect(metaReader.readClass(SomeClass.class)).andReturn(two).once();
 		replay(rowMapperSource, metaReader);
@@ -69,10 +69,10 @@ public class VirpConfigTest {
 
 	@Test
 	public void testInit() {
-		Set<Class<?>> classes = Sets.<Class<?>>newHashSet(MappedSubclass.class, SomeClass.class);
+		Set<Class<?>> classes = Sets.newHashSet(MappedSubclass.class, SomeClass.class);
 		expect(rowMapperSource.getRowMapperClasses()).andReturn(classes).once();
-		RowMapperMetaData one = new RowMapperMetaData(MappedSubclass.class);
-		RowMapperMetaData two = new RowMapperMetaData(SomeClass.class);
+		RowMapperMetaData<MappedSubclass> one = new RowMapperMetaData<MappedSubclass>(MappedSubclass.class);
+		RowMapperMetaData<SomeClass> two = new RowMapperMetaData<SomeClass>(SomeClass.class);
 		expect(metaReader.readClass(MappedSubclass.class)).andReturn(one).once();
 		expect(metaReader.readClass(SomeClass.class)).andReturn(two).once();
 		sessionFactory.setupClass(one);
@@ -95,10 +95,10 @@ public class VirpConfigTest {
 	public void testDuplicateInit() {
 		expectedException.expect(VirpException.class);
 		expectedException.expectMessage("Already initialized");
-		Set<Class<?>> classes = Sets.<Class<?>>newHashSet(MappedSubclass.class, SomeClass.class);
+		Set<Class<?>> classes = Sets.newHashSet(MappedSubclass.class, SomeClass.class);
 		expect(rowMapperSource.getRowMapperClasses()).andReturn(classes).once();
-		RowMapperMetaData one = new RowMapperMetaData(MappedSubclass.class);
-		RowMapperMetaData two = new RowMapperMetaData(SomeClass.class);
+		RowMapperMetaData<MappedSubclass> one = new RowMapperMetaData<MappedSubclass>(MappedSubclass.class);
+		RowMapperMetaData<SomeClass> two = new RowMapperMetaData<SomeClass>(SomeClass.class);
 		expect(metaReader.readClass(MappedSubclass.class)).andReturn(one).once();
 		expect(metaReader.readClass(SomeClass.class)).andReturn(two).once();
 		replay(rowMapperSource, metaReader);

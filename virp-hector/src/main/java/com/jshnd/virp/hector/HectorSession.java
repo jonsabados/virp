@@ -15,13 +15,13 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Set;
 
-public class HectorSession<V, T> extends VirpSession<V> {
+public class HectorSession<T> extends VirpSession<T> {
 
 	private static final Logger log = LoggerFactory.getLogger(HectorSession.class);
 
-	private Mutator<T> mutator;
+	private Mutator mutator;
 
-	public HectorSession(RowMapperMetaData<V> rowMeta, Mutator<T> mutator) {
+	public HectorSession(RowMapperMetaData<T> rowMeta, Mutator mutator) {
 		super(rowMeta);
 		this.mutator = mutator;
 	}
@@ -29,16 +29,21 @@ public class HectorSession<V, T> extends VirpSession<V> {
 	@Override
 	protected void doSave(Object row) {
 		String columnFamily = rowMeta.getColumnFamily();
-		ValueAccessor<T> keyAccessor = (ValueAccessor<T>) rowMeta.getKeyValueAccessor();
-		T key = keyAccessor.getValue(row);
+		ValueAccessor<?> keyAccessor = rowMeta.getKeyValueAccessor();
+		Object key = keyAccessor.getValue(row);
 		Set<ColumnAccessor<?,?>> accessors = rowMeta.getColumnAccessors();
 		for(ColumnAccessor<?, ?> accessor : accessors) {
-			ValueAccessor identifier = accessor.getColumnIdentifier();
-			ValueAccessor value = accessor.getValueAccessor();
+			ValueAccessor<?> identifier = accessor.getColumnIdentifier();
+			ValueAccessor<?> value = accessor.getValueManipulator();
 			HColumn hcolumn = HFactory.createColumn(identifier.getValue(row), value.getValue(row),
 					(Serializer) identifier.getActionFactoryMeta(), (Serializer) value.getActionFactoryMeta());
 			mutator.addInsertion(key, columnFamily, hcolumn);
 		}
+	}
+
+	@Override
+	protected T doGet(Object key) {
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	@Override

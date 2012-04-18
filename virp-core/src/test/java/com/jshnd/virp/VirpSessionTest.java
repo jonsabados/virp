@@ -18,6 +18,8 @@ public class VirpSessionTest {
 
 		boolean closed = false;
 
+		boolean getDone = false;
+
 		TestSession(RowMapperMetaData<Object> metaData) {
 			super(metaData);
 		}
@@ -25,6 +27,12 @@ public class VirpSessionTest {
 		@Override
 		protected void doSave(Object row) {
 			saveDone = true;
+		}
+
+		@Override
+		protected Object doGet(Object key) {
+			getDone = true;
+			return new Object();
 		}
 
 		@Override

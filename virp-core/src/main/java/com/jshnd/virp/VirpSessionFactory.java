@@ -6,6 +6,6 @@ public interface VirpSessionFactory {
 
 	public <T> VirpSession<T> newSession(RowMapperMetaData<T> forType);
 
-	public void setupClass(RowMapperMetaData type);
+	public void setupClass(RowMapperMetaData<?> type);
 
 }
