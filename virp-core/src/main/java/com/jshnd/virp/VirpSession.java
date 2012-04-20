@@ -3,19 +3,19 @@ package com.jshnd.virp;
 import com.jshnd.virp.config.RowMapperMetaData;
 import com.jshnd.virp.exception.VirpOperationException;
 
-public abstract class VirpSession<T> {
+public abstract class VirpSession {
 
 	private boolean open = true;
 
-	protected RowMapperMetaData rowMeta;
+	protected VirpConfig config;
 
-	public VirpSession(RowMapperMetaData<T> rowMeta) {
-		this.rowMeta = rowMeta;
+	public VirpSession(VirpConfig config) {
+		this.config = config;
 	}
 
-	public void save(T row) {
+	public void save(Object row) {
 		sanityCheck();
-		doSave(row);
+		doSave(getMeta(row.getClass()), row);
 	}
 
 	private void sanityCheck() {
@@ -24,9 +24,9 @@ public abstract class VirpSession<T> {
 		}
 	}
 
-	public T get(Object key) {
+	public <T> T get(Class<T> rowClass, Object key) {
 		sanityCheck();
-		return doGet(key);
+		return doGet((RowMapperMetaData<T>) config.getMetaData(rowClass), key);
 	}
 
 	public VirpActionResult close() {
@@ -35,9 +35,17 @@ public abstract class VirpSession<T> {
 		return doClose();
 	}
 
-	protected abstract void doSave(Object row);
+	private RowMapperMetaData getMeta(Class<?> type) {
+		RowMapperMetaData ret = config.getMetaData(type);
+		if(ret == null) {
+			throw new VirpOperationException("Unconfigured class " + type.getName());
+		}
+		return ret;
+	}
 
-	protected abstract T doGet(Object key);
+	protected abstract <T> void doSave(RowMapperMetaData<T> type, T row);
+
+	protected abstract <T> T doGet(RowMapperMetaData<T> type, Object key);
 
 	protected abstract VirpActionResult doClose();
 

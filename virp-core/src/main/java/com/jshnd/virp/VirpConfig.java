@@ -34,7 +34,7 @@ public class VirpConfig {
 		if(meta == null) {
 			throw new VirpException(classFor.getCanonicalName() + " has not been configured");
 		}
-		return sessionFactory.newSession(meta);
+		return sessionFactory.newSession(this);
 	}
 
 	public synchronized void init() {
@@ -47,6 +47,10 @@ public class VirpConfig {
 		}
 		configuredClasses = Collections.unmodifiableMap(workingMap);
 		initialized = true;
+	}
+
+	protected RowMapperMetaData getMetaData(Class<?> type) {
+		return configuredClasses.get(type);
 	}
 
 	private void sanityChecks() {
