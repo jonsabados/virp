@@ -26,13 +26,9 @@ public class VirpConfig {
 
 	private Map<Class<?>, RowMapperMetaData> configuredClasses;
 
-	public VirpSession newSession(Class<?> classFor) {
+	public VirpSession newSession() {
 		if(!initialized) {
 			throw new VirpException("Session has not been initialized - call init() first.");
-		}
-		RowMapperMetaData<?> meta = configuredClasses.get(classFor);
-		if(meta == null) {
-			throw new VirpException(classFor.getCanonicalName() + " has not been configured");
 		}
 		return sessionFactory.newSession(this);
 	}

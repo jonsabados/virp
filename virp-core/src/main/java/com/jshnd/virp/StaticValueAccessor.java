@@ -1,6 +1,6 @@
 package com.jshnd.virp;
 
-public class StaticValueAccessor<T> extends BaseValueAccessor<T> {
+public class StaticValueAccessor<T> extends BaseValueAccessor<T> implements ValueTypeHolder<T> {
 
 	private T value;
 
@@ -11,13 +11,12 @@ public class StaticValueAccessor<T> extends BaseValueAccessor<T> {
 		this.type = type;
 	}
 
-	@Override
-	public T getValue(Object sourceObject) {
+	public T getValue() {
 		return value;
 	}
 
-	@Override
 	public Class<T> getValueType() {
 		return type;
 	}
+
 }

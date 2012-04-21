@@ -28,7 +28,7 @@ public class AnnotationDrivenRowMapperMetaDataReader implements RowMapperMetaDat
 
 	@Override
 	public <T> RowMapperMetaData<T> readClass(Class<T> clazz) {
-		RowMapperMetaData ret = new RowMapperMetaData(clazz);
+		RowMapperMetaData<T> ret = new RowMapperMetaData<T>(clazz);
 		RowMapper mapperAnnotation = clazz.getAnnotation(RowMapper.class);
 		if (null == mapperAnnotation) {
 			throw new VirpAnnotationException(clazz.getCanonicalName() +
@@ -70,7 +70,7 @@ public class AnnotationDrivenRowMapperMetaDataReader implements RowMapperMetaDat
 				}
 				if (keyColumn != null) {
 					enforceSingleKeyColumn(meta);
-					meta.setKeyValueAccessor(accessor);
+					meta.setKeyValueManipulator(accessor);
 				}
 			}
 		}
@@ -124,13 +124,13 @@ public class AnnotationDrivenRowMapperMetaDataReader implements RowMapperMetaDat
 				enforceSingleKeyColumn(meta);
 				makeAccessibleIfNot(field);
 				ReflectionFieldValueAccessor<Object> getter = new ReflectionFieldValueAccessor<Object>(field);
-				meta.setKeyValueAccessor(getter);
+				meta.setKeyValueManipulator(getter);
 			}
 		}
 	}
 
 	private void enforceSingleKeyColumn(RowMapperMetaData meta) {
-		if (meta.getKeyValueAccessor() != null) {
+		if (meta.getKeyValueManipulator() != null) {
 			throw new VirpException("Classes may only have a single key column");
 		}
 	}

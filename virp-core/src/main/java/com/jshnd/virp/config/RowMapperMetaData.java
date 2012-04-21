@@ -1,7 +1,7 @@
 package com.jshnd.virp.config;
 
 import com.jshnd.virp.ColumnAccessor;
-import com.jshnd.virp.ValueAccessor;
+import com.jshnd.virp.ValueManipulator;
 
 import java.util.Collections;
 import java.util.Set;
@@ -12,7 +12,7 @@ public class RowMapperMetaData<T> {
 
 	private String columnFamily;
 
-	private ValueAccessor<?> keyValueAccessor;
+	private ValueManipulator<?> keyValueManipulator;
 
 	private Set<ColumnAccessor<?, ?>> columnAccessors;
 
@@ -41,11 +41,11 @@ public class RowMapperMetaData<T> {
 		this.columnAccessors = Collections.unmodifiableSet(columnAccessors);
 	}
 
-	public ValueAccessor<?> getKeyValueAccessor() {
-		return keyValueAccessor;
+	public ValueManipulator<?> getKeyValueManipulator() {
+		return keyValueManipulator;
 	}
 
-	public void setKeyValueAccessor(ValueAccessor<?> keyValueAccessor) {
-		this.keyValueAccessor = keyValueAccessor;
+	public void setKeyValueManipulator(ValueManipulator<?> keyValueManipulator) {
+		this.keyValueManipulator = keyValueManipulator;
 	}
 }

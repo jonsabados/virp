@@ -1,16 +1,16 @@
 package com.jshnd.virp;
 
-public abstract class BaseValueAccessor<T> implements  ValueAccessor<T> {
+public abstract class BaseValueAccessor<T> implements  SessionFactoryDataHolder<T> {
 
-	private Object meta;
+	private Object sessionFactoryData;
 
 	@Override
-	public Object getActionFactoryMeta() {
-		return meta;
+	public Object getSessionFactoryData() {
+		return sessionFactoryData;
 	}
 
 	@Override
-	public void setActionFactoryMeta(Object meta) {
-		this.meta = meta;
+	public void setSessionFactoryData(Object sessionFactoryData) {
+		this.sessionFactoryData = sessionFactoryData;
 	}
 }

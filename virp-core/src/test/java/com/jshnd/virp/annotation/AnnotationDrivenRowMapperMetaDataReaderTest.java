@@ -70,14 +70,14 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 	@Test
 	public void testPropertyKeyKeyColumn() {
 		RowMapperMetaData<OkPropertyKeyTester> meta = testObj.readClass(OkPropertyKeyTester.class);
-		assertNotNull(meta.getKeyValueAccessor());
+		assertNotNull(meta.getKeyValueManipulator());
 		OkPropertyKeyTester bean = new OkPropertyKeyTester();
 		bean.key = "fooBar";
-		assertEquals("fooBar", meta.getKeyValueAccessor().getValue(bean));
-		assertEquals(String.class, meta.getKeyValueAccessor().getValueType());
+		assertEquals("fooBar", meta.getKeyValueManipulator().getValue(bean));
+		assertEquals(String.class, meta.getKeyValueManipulator().getValueType());
 		assertEquals(1, meta.getColumnAccessors().size());
 		ColumnAccessor getter = Iterables.getFirst(meta.getColumnAccessors(), null);
-		assertEquals("foo", getter.getColumnIdentifier().getValue(bean));
+		assertEquals("foo", getter.getColumnIdentifier().getValue());
 		assertEquals("fooBar", getter.getValueManipulator().getValue(bean));
 	}
 
@@ -97,7 +97,7 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 		bean.key = "fooBar";
 		assertEquals(1, meta.getColumnAccessors().size());
 		ColumnAccessor getter = Iterables.getFirst(meta.getColumnAccessors(), null);
-		assertEquals(Long.valueOf(10), getter.getColumnIdentifier().getValue(bean));
+		assertEquals(Long.valueOf(10), getter.getColumnIdentifier().getValue());
 		assertEquals(Long.class, getter.getColumnIdentifier().getValueType());
 		assertEquals("fooBar", getter.getValueManipulator().getValue(bean));
 	}
@@ -125,7 +125,7 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 		bean.setKey("fooBar");
 		assertEquals(1, meta.getColumnAccessors().size());
 		ColumnAccessor getter = Iterables.getFirst(meta.getColumnAccessors(), null);
-		assertEquals(Long.valueOf(10), getter.getColumnIdentifier().getValue(bean));
+		assertEquals(Long.valueOf(10), getter.getColumnIdentifier().getValue());
 		assertEquals(Long.class, getter.getColumnIdentifier().getValueType());
 		assertEquals("fooBar", getter.getValueManipulator().getValue(bean));
 	}
@@ -151,13 +151,13 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 	@Test
 	public void testMethodKeyKeyColumn() {
 		RowMapperMetaData<OkMethodKeyTester> meta = testObj.readClass(OkMethodKeyTester.class);
-		assertNotNull(meta.getKeyValueAccessor());
+		assertNotNull(meta.getKeyValueManipulator());
 		OkMethodKeyTester bean = new OkMethodKeyTester();
 		bean.setKey("fooBar");
-		assertEquals("fooBar", meta.getKeyValueAccessor().getValue(bean));
-		assertEquals(String.class, meta.getKeyValueAccessor().getValueType());
+		assertEquals("fooBar", meta.getKeyValueManipulator().getValue(bean));
+		assertEquals(String.class, meta.getKeyValueManipulator().getValueType());
 		ColumnAccessor getter = Iterables.getFirst(meta.getColumnAccessors(), null);
-		assertEquals("foo", getter.getColumnIdentifier().getValue(bean));
+		assertEquals("foo", getter.getColumnIdentifier().getValue());
 		assertEquals("fooBar", getter.getValueManipulator().getValue(bean));
 	}
 
@@ -198,7 +198,7 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 		source.setSomeProperty("notme");
 		source.setMethodProperty("fooBar!");
 
-		assertEquals("bar", getter.getColumnIdentifier().getValue(source));
+		assertEquals("bar", getter.getColumnIdentifier().getValue());
 		assertEquals(String.class, getter.getValueManipulator().getValueType());
 		assertEquals("fooBar!", getter.getValueManipulator().getValue(source));
 	}
@@ -217,7 +217,7 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 		source.setMethodProperty("notme");
 		source.setColumnProperty("fooBar!");
 
-		assertEquals("foo", getter.getColumnIdentifier().getValue(source));
+		assertEquals("foo", getter.getColumnIdentifier().getValue());
 		assertEquals(String.class, getter.getValueManipulator().getValueType());
 		assertEquals("fooBar!", getter.getValueManipulator().getValue(source));
 	}

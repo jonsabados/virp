@@ -1,9 +1,6 @@
 package com.jshnd.virp.hector;
 
-import com.jshnd.virp.ColumnAccessor;
-import com.jshnd.virp.ValueAccessor;
-import com.jshnd.virp.VirpConfig;
-import com.jshnd.virp.VirpSessionFactory;
+import com.jshnd.virp.*;
 import com.jshnd.virp.config.RowMapperMetaData;
 import me.prettyprint.cassandra.serializers.*;
 import me.prettyprint.hector.api.Keyspace;
@@ -18,37 +15,39 @@ public class HectorSessionFactory implements VirpSessionFactory {
 	@SuppressWarnings("unchecked")
 	public HectorSession newSession(VirpConfig config) {
 		Mutator<byte[]> mutator = HFactory.createMutator(keyspace, BytesArraySerializer.get());
-		return new HectorSession(config, mutator);
+		return new HectorSession(config, mutator, keyspace);
 	}
 
 	@Override
 	public void setupClass(RowMapperMetaData<?> type) {
-		setupSerializer(type.getKeyValueAccessor());
+		setupSerializer(type.getKeyValueManipulator());
 		for (ColumnAccessor<?, ?> accessor : type.getColumnAccessors()) {
 			setupSerializer(accessor.getValueManipulator());
 			setupSerializer(accessor.getColumnIdentifier());
 		}
 	}
 
-	private void setupSerializer(ValueAccessor<?> accessor) {
+	private void setupSerializer(SessionFactoryDataHolder<?> accessor) {
 		Class<?> type = accessor.getValueType();
 		if (type.isPrimitive()) {
 			setupPrimitive(accessor, type);
 		} else {
 			if (type.isAssignableFrom(String.class)) {
-				accessor.setActionFactoryMeta(StringSerializer.get());
-			} else if (type.isAssignableFrom(Integer.class)) {
-				accessor.setActionFactoryMeta(IntegerSerializer.get());
+				accessor.setSessionFactoryData(StringSerializer.get());
 			} else if (type.isAssignableFrom(Long.class)) {
-				accessor.setActionFactoryMeta(LongSerializer.get());
-			} else if (type.isAssignableFrom(Float.class)) {
-				accessor.setActionFactoryMeta(FloatSerializer.get());
-			} else if (type.isAssignableFrom(Double.class)) {
-				accessor.setActionFactoryMeta(DoubleSerializer.get());
+				accessor.setSessionFactoryData(LongSerializer.get());
+			} else if (type.isAssignableFrom(Integer.class)) {
+				accessor.setSessionFactoryData(IntegerSerializer.get());
 			} else if (type.isAssignableFrom(ShortSerializer.class)) {
-				accessor.setActionFactoryMeta(ShortSerializer.get());
-			} else if (type.isAssignableFrom(Boolean.class)) {
-				accessor.setActionFactoryMeta(BooleanSerializer.get());
+				accessor.setSessionFactoryData(ShortSerializer.get());
+			} else if (type.isAssignableFrom(Byte.class)) {
+				accessor.setSessionFactoryData(ByteSerializer.get());
+			} else if (type.isAssignableFrom(Float.class)) {
+				accessor.setSessionFactoryData(FloatSerializer.get());
+			} else if (type.isAssignableFrom(Double.class)) {
+				accessor.setSessionFactoryData(DoubleSerializer.get());
+			}else if (type.isAssignableFrom(Boolean.class)) {
+				accessor.setSessionFactoryData(BooleanSerializer.get());
 			} else {
 				throw new VirpHectorException("Unable to deal with " + type.getCanonicalName() +
 						", serializer needs setup.");
@@ -56,23 +55,23 @@ public class HectorSessionFactory implements VirpSessionFactory {
 		}
 	}
 
-	private void setupPrimitive(ValueAccessor<?> accessor, Class<?> type) {
+	private void setupPrimitive(SessionFactoryDataHolder<?> accessor, Class<?> type) {
 		if (type.equals(long.class)) {
-			accessor.setActionFactoryMeta(LongSerializer.get());
+			accessor.setSessionFactoryData(LongSerializer.get());
 		} else if (type.equals(int.class)) {
-			accessor.setActionFactoryMeta(IntegerSerializer.get());
+			accessor.setSessionFactoryData(IntegerSerializer.get());
 		} else if (type.equals(short.class)) {
-			accessor.setActionFactoryMeta(ShortSerializer.get());
+			accessor.setSessionFactoryData(ShortSerializer.get());
 		} else if (type.equals(byte.class)) {
-			accessor.setActionFactoryMeta(ByteSerializer.get());
+			accessor.setSessionFactoryData(ByteSerializer.get());
 		} else if (type.equals(float.class)) {
-			accessor.setActionFactoryMeta(FloatSerializer.get());
+			accessor.setSessionFactoryData(FloatSerializer.get());
 		} else if (type.equals(double.class)) {
-			accessor.setActionFactoryMeta(DoubleSerializer.get());
+			accessor.setSessionFactoryData(DoubleSerializer.get());
 		} else if (type.equals(boolean.class)) {
-			accessor.setActionFactoryMeta(BooleanSerializer.get());
+			accessor.setSessionFactoryData(BooleanSerializer.get());
 		} else if (type.equals(char.class)) {
-			accessor.setActionFactoryMeta(CharSerializer.get());
+			accessor.setSessionFactoryData(CharSerializer.get());
 		}
 	}
 

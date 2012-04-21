@@ -21,13 +21,13 @@ import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.SliceQuery;
 import me.prettyprint.hector.testutils.EmbeddedServerHelper;
 import org.junit.AfterClass;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static me.prettyprint.hector.api.factory.HFactory.createKeyspace;
 import static me.prettyprint.hector.api.factory.HFactory.getOrCreateCluster;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class VirpHectorITCase {
 
@@ -37,7 +37,7 @@ public class VirpHectorITCase {
 
 	private static Keyspace testKeyspace;
 
-	private VirpConfig config;
+	private static VirpConfig config;
 
 	@BeforeClass
 	public static void startupEmbeddedCluster() throws Exception {
@@ -50,6 +50,20 @@ public class VirpHectorITCase {
 		definition.setReplicationFactor(1);
 		cluster.addKeyspace(definition);
 		testKeyspace = createKeyspace("TEST", cluster);
+		ColumnFamilyDefinition columnFamilyDefinition = new BasicColumnFamilyDefinition();
+		columnFamilyDefinition.setName("BasicTestObject");
+		columnFamilyDefinition.setKeyspaceName(testKeyspace.getKeyspaceName());
+		cluster.addColumnFamily(columnFamilyDefinition);
+
+		config = new VirpConfig();
+		config.setMetaDataReader(new AnnotationDrivenRowMapperMetaDataReader());
+		ConfiguredRowMapperSource source = new ConfiguredRowMapperSource();
+		source.setRowMapperClasses(Sets.<Class<?>>newHashSet(BasicSaveObject.class));
+		config.setRowMapperSource(source);
+		HectorSessionFactory actionFactory = new HectorSessionFactory();
+		actionFactory.setKeyspace(testKeyspace);
+		config.setSessionFactory(actionFactory);
+		config.init();
 	}
 
 	@AfterClass
@@ -57,25 +71,16 @@ public class VirpHectorITCase {
 		EmbeddedServerHelper.cleanup();
 	}
 
-	@Before
-	public void setup() {
-		config = new VirpConfig();
-		config.setMetaDataReader(new AnnotationDrivenRowMapperMetaDataReader());
-	}
-
-	@RowMapper(columnFamily = "BasicSaveObject")
+	@RowMapper(columnFamily = "BasicTestObject")
 	public static class BasicSaveObject {
 
 		@KeyColumn
-		@SuppressWarnings("unused")
 		private String key;
 
 		@NamedColumn(name = "columnOne")
-		@SuppressWarnings("unused")
 		private String columnOne;
 
 		@NamedColumn(name = "columnTwo")
-		@SuppressWarnings("unused")
 		private String columnTwo;
 
 		@NumberedColumn(number = 10)
@@ -85,47 +90,55 @@ public class VirpHectorITCase {
 
 	@Test
 	public void testBasicSave() {
-		ColumnFamilyDefinition columnFamilyDefinition = new BasicColumnFamilyDefinition();
-		columnFamilyDefinition.setName("BasicSaveObject");
-		columnFamilyDefinition.setKeyspaceName(testKeyspace.getKeyspaceName());
-		cluster.addColumnFamily(columnFamilyDefinition);
-
-		ConfiguredRowMapperSource source = new ConfiguredRowMapperSource();
-		source.setRowMapperClasses(Sets.<Class<?>>newHashSet(BasicSaveObject.class));
-		config.setRowMapperSource(source);
-		HectorSessionFactory actionFactory = new HectorSessionFactory();
-		actionFactory.setKeyspace(testKeyspace);
-		config.setSessionFactory(actionFactory);
-		config.init();
-
 		BasicSaveObject row = new BasicSaveObject();
-		row.key = "bob";
+		row.key = "save";
 		row.columnOne = "valueForColumnOne";
 		row.columnTwo = "valueForColumnTwo";
 		row.columnTen = 20;
 
-		VirpSession session = config.newSession(BasicSaveObject.class);
+		VirpSession session = config.newSession();
 		session.save(row);
 		session.close();
 
-		Serializer stringSerializer = StringSerializer.get();
+		Serializer<String> stringSerializer = StringSerializer.get();
 		SliceQuery<String, String, String> query =
 				HFactory.createSliceQuery(testKeyspace, stringSerializer, stringSerializer, stringSerializer);
-		query.setColumnFamily("BasicSaveObject");
-		query.setKey("bob");
+		query.setColumnFamily("BasicTestObject");
+		query.setKey("save");
 		query.setColumnNames("columnOne", "columnTwo");
 		QueryResult<ColumnSlice<String, String>> result = query.execute();
 		assertEquals("valueForColumnOne", result.get().getColumnByName("columnOne").getValue());
 		assertEquals("valueForColumnTwo", result.get().getColumnByName("columnTwo").getValue());
 
-		Serializer longSerializer = LongSerializer.get();
+		Serializer<Long> longSerializer = LongSerializer.get();
 		ColumnQuery<String, Long, Long> query2 =
 				HFactory.createColumnQuery(testKeyspace, stringSerializer, longSerializer, longSerializer);
-		query2.setColumnFamily("BasicSaveObject");
-		query2.setKey("bob");
+		query2.setColumnFamily("BasicTestObject");
+		query2.setKey("save");
 		query2.setName(Long.valueOf(10));
 		QueryResult<HColumn<Long, Long>> res = query2.execute();
 		assertEquals(Long.valueOf(20), res.get().getValue());
+	}
+
+	@Test
+	public void testBasicRead() {
+		BasicSaveObject row = new BasicSaveObject();
+		row.key = "read";
+		row.columnOne = "foo";
+		row.columnTwo = "bar";
+		row.columnTen = 21;
+
+		VirpSession session = config.newSession();
+		session.save(row);
+		session.close();
+
+		session = config.newSession();
+		BasicSaveObject res = session.get(BasicSaveObject.class, "read");
+		assertNotNull(res);
+		assertEquals("read", res.key);
+		assertEquals("foo", res.columnOne);
+		assertEquals("bar", res.columnTwo);
+		assertEquals(21, res.columnTen);
 	}
 
 }
