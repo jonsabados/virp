@@ -26,6 +26,8 @@ public class VirpConfig {
 
 	private Map<Class<?>, RowMapperMetaData> configuredClasses;
 
+	private boolean noColumnsEqualsNullRow = false;
+
 	public VirpSession newSession() {
 		if(!initialized) {
 			throw new VirpException("Session has not been initialized - call init() first.");
@@ -81,6 +83,14 @@ public class VirpConfig {
 
 	public void setSessionFactory(VirpSessionFactory sessionFactory) {
 		this.sessionFactory = sessionFactory;
+	}
+
+	public boolean isNoColumnsEqualsNullRow() {
+		return noColumnsEqualsNullRow;
+	}
+
+	public void setNoColumnsEqualsNullRow(boolean noColumnsEqualsNullRow) {
+		this.noColumnsEqualsNullRow = noColumnsEqualsNullRow;
 	}
 
 	protected Map<Class<?>, RowMapperMetaData> getConfiguredClasses() {

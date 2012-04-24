@@ -33,6 +33,7 @@ public class HectorSession extends VirpSession {
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	protected <T> void doSave(RowMapperMetaData<T> type, T row) {
 		String columnFamily = type.getColumnFamily();
 		ValueAccessor<?> keyAccessor = type.getKeyValueManipulator();
@@ -49,28 +50,17 @@ public class HectorSession extends VirpSession {
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	protected <T> T doGet(RowMapperMetaData<T> type, Object key) {
 		BytesArraySerializer serializer = BytesArraySerializer.get();
 		SliceQuery<byte[], byte[], byte[]> query =
 				HFactory.createSliceQuery(keyspace, serializer, serializer, serializer);
 
-		ValueManipulator keyManipulator = type.getKeyValueManipulator();
-		Serializer keySerializer = (Serializer) keyManipulator.getSessionFactoryData();
-		query.setKey(keySerializer.toBytes(key));
+		TypeBits typeBits = new TypeBits<T>(type);
+		query.setKey(typeBits.keySerializer.toBytes(key));
 
-		Set<ColumnAccessor<?,?>> accessors = type.getColumnAccessors();
-		byte[][] columns = new byte[accessors.size()][];
-		ValueManipulator[] manipulators = new ValueManipulator[accessors.size()];
-		int i = 0;
-		for(ColumnAccessor<?,?> accessor : type.getColumnAccessors()) {
-			StaticValueAccessor identifier = accessor.getColumnIdentifier();
-			Serializer identifierSerializer = (Serializer) identifier.getSessionFactoryData();
-			columns[i] = identifierSerializer.toBytes(identifier.getValue());
-			manipulators[i] = accessor.getValueManipulator();
-			i++;
-		}
 		query.setColumnFamily(type.getColumnFamily());
-		query.setColumnNames(columns);
+		query.setColumnNames(typeBits.columns);
 
 		QueryResult<ColumnSlice<byte[], byte[]>> result = query.execute();
 		if(log.isTraceEnabled()) {
@@ -79,22 +69,31 @@ public class HectorSession extends VirpSession {
 					+ result.getExecutionTimeMicro() + " micro");
 		}
 		ColumnSlice<byte[], byte[]> slice = result.get();
+		T ret = fromSlice(type, typeBits, slice);
+
+		if(ret != null) {
+			typeBits.keyManipulator.setValue(ret, key);
+		}
+		return ret;
+	}
+
+	@SuppressWarnings("unchecked")
+	private <T> T fromSlice(RowMapperMetaData<T> type, TypeBits typeBits, ColumnSlice<byte[], byte[]> slice) {
+		if(slice.getColumns().size() == 0 && config.isNoColumnsEqualsNullRow()) {
+			return null;
+		}
 		T ret;
 		try {
 			ret = type.getRowMapperClass().newInstance();
-		} catch(Exception e) {
+		} catch (Exception e) {
 			throw new VirpHectorException("Unable to initialize class of type " + type.getClass().getCanonicalName());
 		}
-		keyManipulator.setValue(ret, key);
-		for(i = 0; i < columns.length; i++) {
+		for (int i = 0; i < slice.getColumns().size(); i++) {
 			HColumn<byte[], byte[]> column = slice.getColumns().get(i);
-			if(column != null) {
-				// ewww.... but just to get things rolling
-				for(int j = 0; j < columns.length; j++) {
-					if(!equal(column.getName(), columns[j])) {
-						continue;
-					} else {
-						ValueManipulator manipulator = manipulators[j];
+			if (column != null) {
+				for (int j = 0; j < typeBits.columnCount; j++) {
+					if (equal(column.getName(), typeBits.columns[j])) {
+						ValueManipulator manipulator = typeBits.manipulators[j];
 						Serializer valueSerializer = (Serializer) manipulator.getSessionFactoryData();
 						Object value = valueSerializer.fromBytes(column.getValue());
 						manipulator.setValue(ret, value);
@@ -131,4 +130,29 @@ public class HectorSession extends VirpSession {
 		}
 	}
 
+	private static class TypeBits<T> {
+		private byte[][] columns;
+		private ValueManipulator[] manipulators;
+		private int columnCount;
+		ValueManipulator keyManipulator;
+		Serializer keySerializer;
+
+		@SuppressWarnings("unchecked")
+		TypeBits(RowMapperMetaData<T> type) {
+			Set<ColumnAccessor<?,?>> accessors = type.getColumnAccessors();
+			keyManipulator = type.getKeyValueManipulator();
+			keySerializer = (Serializer) keyManipulator.getSessionFactoryData();
+			columns = new byte[accessors.size()][];
+			manipulators = new ValueManipulator[accessors.size()];
+			columnCount = 0;
+			for(ColumnAccessor<?,?> accessor : type.getColumnAccessors()) {
+				StaticValueAccessor identifier = accessor.getColumnIdentifier();
+				Serializer identifierSerializer = (Serializer) identifier.getSessionFactoryData();
+				columns[columnCount] = identifierSerializer.toBytes(identifier.getValue());
+				manipulators[columnCount] = accessor.getValueManipulator();
+				columnCount++;
+			}
+		}
+
+	}
 }
