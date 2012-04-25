@@ -47,7 +47,7 @@ public class VirpConfig {
 		initialized = true;
 	}
 
-	protected RowMapperMetaData getMetaData(Class<?> type) {
+	protected <T> RowMapperMetaData<T> getMetaData(Class<T> type) {
 		return configuredClasses.get(type);
 	}
 

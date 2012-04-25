@@ -7,11 +7,14 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.util.List;
+
 import static org.easymock.EasyMock.*;
 import static org.junit.Assert.assertTrue;
 
 public class VirpSessionTest {
 
+	@SuppressWarnings("unchecked")
 	private static class TestSession extends VirpSession {
 
 		boolean saveDone = false;
@@ -19,6 +22,10 @@ public class VirpSessionTest {
 		boolean closed = false;
 
 		boolean getDone = false;
+
+		private Object getReturns;
+
+		private List<Object> getManyReturns;
 
 		TestSession(VirpConfig config) {
 			super(config);
@@ -30,9 +37,14 @@ public class VirpSessionTest {
 		}
 
 		@Override
-		protected <T> T doGet(RowMapperMetaData<T> type, Object key) {
+		protected <T, K> T doGet(RowMapperMetaData<T> type, K key) {
 			getDone = true;
-			return (T) new Object();
+			return (T) getReturns;
+		}
+
+		@Override
+		protected <T, K> List<T> doGet(RowMapperMetaData<T> type, K... keys) {
+			return (List<T>) getManyReturns;
 		}
 
 		@Override
@@ -40,6 +52,8 @@ public class VirpSessionTest {
 			closed = true;
 			return createMock(VirpActionResult.class);
 		}
+
+
 	}
 
 	private TestSession testObj;

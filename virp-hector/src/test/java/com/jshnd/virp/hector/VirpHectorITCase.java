@@ -26,6 +26,9 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.util.List;
+import java.util.Map;
+
 import static me.prettyprint.hector.api.factory.HFactory.createKeyspace;
 import static me.prettyprint.hector.api.factory.HFactory.getOrCreateCluster;
 import static org.junit.Assert.*;
@@ -59,6 +62,7 @@ public class VirpHectorITCase {
 	}
 
 	@Before
+	@SuppressWarnings("unchecked")
 	public void setup() {
 		config = new VirpConfig();
 		config.setMetaDataReader(new AnnotationDrivenRowMapperMetaDataReader());
@@ -123,14 +127,7 @@ public class VirpHectorITCase {
 	@Test
 	public void testBasicRead() {
 		Mutator<String> mutator = HFactory.createMutator(testKeyspace, StringSerializer.get());
-		Serializer<String> stringSerializer = StringSerializer.get();
-		Serializer<Long> longSerializer = LongSerializer.get();
-		mutator.addInsertion("read", "BasicTestObject",
-				HFactory.createColumn("columnOne", "foo", stringSerializer, stringSerializer));
-		mutator.addInsertion("read", "BasicTestObject",
-				HFactory.createColumn("columnTwo", "bar", stringSerializer, stringSerializer));
-		mutator.addInsertion("read", "BasicTestObject",
-				HFactory.createColumn(Long.valueOf(10), Long.valueOf(21), longSerializer, longSerializer));
+		createBasicTestObject(mutator, "read", "foo", "bar", Long.valueOf(21));
 		mutator.execute();
 
 		VirpSession session = config.newSession();
@@ -140,6 +137,8 @@ public class VirpHectorITCase {
 		assertEquals("foo", res.columnOne);
 		assertEquals("bar", res.columnTwo);
 		assertEquals(21, res.columnTen);
+
+		session.close();
 	}
 
 	@Test
@@ -149,6 +148,8 @@ public class VirpHectorITCase {
 
 		BasicSaveObject res = session.get(BasicSaveObject.class, "nothingToSeeHere");
 		assertNull(res);
+
+		session.close();
 	}
 
 	@Test
@@ -162,6 +163,126 @@ public class VirpHectorITCase {
 		assertNull(res.columnOne);
 		assertNull(res.columnTwo);
 		assertEquals(0, res.columnTen);
+
+		session.close();
+	}
+
+	@Test
+	public void testGetMultiple() {
+		Mutator<String> mutator = HFactory.createMutator(testKeyspace, StringSerializer.get());
+		createBasicTestObject(mutator, "multipleA", "one", "two", Long.valueOf(22));
+		createBasicTestObject(mutator, "multipleB", "three", "four", Long.valueOf(23));
+		mutator.execute();
+
+		VirpSession session = config.newSession();
+		List<BasicSaveObject> result = session.get(BasicSaveObject.class, "multipleA", "multipleB");
+		assertEquals(2, result.size());
+		boolean aHit = false;
+		boolean bHit = false;
+		for(BasicSaveObject object : result) {
+			if("multipleA".equals(object.key)) {
+				aHit = true;
+				assertEquals("one", object.columnOne);
+				assertEquals("two", object.columnTwo);
+				assertEquals(Long.valueOf(22), Long.valueOf(object.columnTen));
+			} else if("multipleB".equals(object.key)) {
+				bHit = true;
+				assertEquals("three", object.columnOne);
+				assertEquals("four", object.columnTwo);
+				assertEquals(Long.valueOf(23), Long.valueOf(object.columnTen));
+			} else {
+				fail("Unexpected key: "  + object.key);
+			}
+		}
+		assertTrue(aHit);
+		assertTrue(bHit);
+	}
+
+	@Test
+	public void testGetMultipleMap() {
+		Mutator<String> mutator = HFactory.createMutator(testKeyspace, StringSerializer.get());
+		createBasicTestObject(mutator, "multipleC", "one", "two", Long.valueOf(22));
+		createBasicTestObject(mutator, "multipleD", "three", "four", Long.valueOf(23));
+		mutator.execute();
+
+		VirpSession session = config.newSession();
+		Map<String, BasicSaveObject> result = session.getMapped(BasicSaveObject.class, "multipleC", "multipleD");
+		assertEquals(2, result.size());
+		assertTrue(result.containsKey("multipleC"));
+		assertTrue(result.containsKey("multipleD"));
+		BasicSaveObject object = result.get("multipleC");
+		assertEquals("multipleC", object.key);
+		assertEquals("one", object.columnOne);
+		assertEquals("two", object.columnTwo);
+		assertEquals(Long.valueOf(22), Long.valueOf(object.columnTen));
+
+		object = result.get("multipleD");
+		assertEquals("multipleD", object.key);
+		assertEquals("three", object.columnOne);
+		assertEquals("four", object.columnTwo);
+		assertEquals(Long.valueOf(23), Long.valueOf(object.columnTen));
+	}
+
+	@Test
+	public void testGetMultipleNotNullConfig() {
+		config.setNoColumnsEqualsNullRow(false);
+		Mutator<String> mutator = HFactory.createMutator(testKeyspace, StringSerializer.get());
+		createBasicTestObject(mutator, "multipleE", "one", "two", Long.valueOf(22));
+		mutator.execute();
+
+		VirpSession session = config.newSession();
+		List<BasicSaveObject> result = session.get(BasicSaveObject.class, "multipleE", "multipleF");
+		assertEquals(2, result.size());
+		boolean eHit = false;
+		boolean fHit = false;
+		for(BasicSaveObject object : result) {
+			if("multipleE".equals(object.key)) {
+				eHit = true;
+				assertEquals("one", object.columnOne);
+				assertEquals("two", object.columnTwo);
+				assertEquals(Long.valueOf(22), Long.valueOf(object.columnTen));
+			} else if("multipleF".equals(object.key)) {
+				fHit = true;
+				assertNull(object.columnOne);
+				assertNull(object.columnTwo);
+				assertEquals(Long.valueOf(0), Long.valueOf(object.columnTen));
+			} else {
+				fail("Unexpected key: "  + object.key);
+			}
+		}
+		assertTrue(eHit);
+		assertTrue(fHit);
+	}
+
+	@Test
+	public void testGetMultipleNullConfig() {
+		config.setNoColumnsEqualsNullRow(true);
+		Mutator<String> mutator = HFactory.createMutator(testKeyspace, StringSerializer.get());
+		createBasicTestObject(mutator, "multipleG", "one", "two", Long.valueOf(22));
+		mutator.execute();
+
+		VirpSession session = config.newSession();
+		List<BasicSaveObject> result = session.get(BasicSaveObject.class, "multipleG", "multipleH");
+		assertEquals(1, result.size());
+
+		BasicSaveObject object = result.get(0);
+
+		assertEquals("multipleG", object.key);
+		assertEquals("one", object.columnOne);
+		assertEquals("two", object.columnTwo);
+		assertEquals(Long.valueOf(22), Long.valueOf(object.columnTen));
+	}
+
+	private void createBasicTestObject(Mutator<String> mutator, String key, String columnOne, String columnTwo,
+									   Long columnTen) {
+		Serializer<String> stringSerializer = StringSerializer.get();
+		Serializer<Long> longSerializer = LongSerializer.get();
+		mutator.addInsertion(key, "BasicTestObject",
+				HFactory.createColumn("columnOne", columnOne, stringSerializer, stringSerializer));
+		mutator.addInsertion(key, "BasicTestObject",
+				HFactory.createColumn("columnTwo", columnTwo, stringSerializer, stringSerializer));
+		mutator.addInsertion(key, "BasicTestObject",
+				HFactory.createColumn(Long.valueOf(10), columnTen, longSerializer, longSerializer));
 	}
 
 }
