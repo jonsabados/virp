@@ -23,12 +23,6 @@ public abstract class VirpSession {
 		doSave(getMeta((Class<T>) row.getClass()), row);
 	}
 
-	private void sanityCheck() {
-		if(!open) {
-			throw new VirpOperationException("Session has been closed");
-		}
-	}
-
 	public <T, K> T get(Class<T> rowClass, K key) {
 		sanityCheck();
 		return doGet(getMeta(rowClass), key);
@@ -37,13 +31,18 @@ public abstract class VirpSession {
 	public <T, K> List<T> get(Class<T> rowClass, K... keys) {
 		sanityCheck();
 		RowMapperMetaData<T> meta = getMeta(rowClass);
+		return getWithMeta(meta, keys);
+	}
+
+	private <T, K> List<T> getWithMeta(RowMapperMetaData<T> meta, K... keys) {
 		return doGet(meta, keys);
 	}
 
-	public <T, K> Map<K, T> getMapped(Class<T> rowClass, K... keys) {
+	public <T, K> Map<K, T> getAsMap(Class<T> rowClass, K... keys) {
+		sanityCheck();
 		RowMapperMetaData<T> meta = getMeta(rowClass);
-		Collection<T> values = get(rowClass, keys);
-		ValueAccessor<K> accessor = (ValueAccessor<K>) meta.getKeyValueManipulator();
+		Collection<T> values = getWithMeta(meta, keys);
+		ValueAccessor<K> accessor = meta.getKeyValueManipulator();
 		Map<K, T> ret = new HashMap<K, T>();
 		for(T row : values) {
 			ret.put(accessor.getValue(row), row);
@@ -63,6 +62,12 @@ public abstract class VirpSession {
 			throw new VirpOperationException("Unconfigured class " + type.getName());
 		}
 		return ret;
+	}
+
+	private void sanityCheck() {
+		if(!open) {
+			throw new VirpOperationException("Session has been closed");
+		}
 	}
 
 	protected abstract <T> void doSave(RowMapperMetaData<T> type, T row);

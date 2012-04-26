@@ -37,13 +37,15 @@ public class VirpHectorITCase {
 
 	private static Keyspace testKeyspace;
 
+	private static Cluster cluster;
+
 	private VirpConfig config;
 
 	@BeforeClass
 	public static void startupEmbeddedCluster() throws Exception {
 		EmbeddedServerHelper helper = new EmbeddedServerHelper();
 		helper.setup();
-		Cluster cluster = getOrCreateCluster("Test Cluster", "127.0.0.1:9160");
+		cluster = getOrCreateCluster("Test Cluster", "127.0.0.1:9160");
 		BasicKeyspaceDefinition definition = new BasicKeyspaceDefinition();
 		definition.setName("TEST");
 		definition.setStrategyClass("org.apache.cassandra.locator.SimpleStrategy");
@@ -64,6 +66,7 @@ public class VirpHectorITCase {
 	@Before
 	@SuppressWarnings("unchecked")
 	public void setup() {
+		cluster.truncate("TEST", "BasicTestObject");
 		config = new VirpConfig();
 		config.setMetaDataReader(new AnnotationDrivenRowMapperMetaDataReader());
 		ConfiguredRowMapperSource source = new ConfiguredRowMapperSource();
@@ -206,7 +209,7 @@ public class VirpHectorITCase {
 		mutator.execute();
 
 		VirpSession session = config.newSession();
-		Map<String, BasicSaveObject> result = session.getMapped(BasicSaveObject.class, "multipleC", "multipleD");
+		Map<String, BasicSaveObject> result = session.getAsMap(BasicSaveObject.class, "multipleC", "multipleD");
 		assertEquals(2, result.size());
 		assertTrue(result.containsKey("multipleC"));
 		assertTrue(result.containsKey("multipleD"));

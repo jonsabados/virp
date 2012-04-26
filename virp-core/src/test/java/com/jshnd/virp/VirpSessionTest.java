@@ -7,10 +7,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import static org.easymock.EasyMock.*;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class VirpSessionTest {
 
@@ -70,6 +72,24 @@ public class VirpSessionTest {
 	}
 
 	@Test
+	public void testSaveUnconfigured() {
+		expectedException.expect(VirpOperationException.class);
+		expectedException.expectMessage("Unconfigured class java.lang.Integer");
+
+		testObj.save(Integer.valueOf(20));
+	}
+
+	@Test
+	public void testSaveClosed() {
+		expectedException.expect(VirpOperationException.class);
+		expectedException.expectMessage("Session has been closed");
+
+		testObj.close();
+
+		testObj.save(Integer.valueOf(20));
+	}
+
+	@Test
 	public void testSave() {
 		expectedException.expect(VirpOperationException.class);
 		expectedException.expectMessage("Session has been closed");
@@ -85,14 +105,109 @@ public class VirpSessionTest {
 	}
 
 	@Test
-	public void testSaveUnconfigured() {
+	public void testGetUnconfigured() {
 		expectedException.expect(VirpOperationException.class);
 		expectedException.expectMessage("Unconfigured class java.lang.Integer");
 
-		testObj.save(Integer.valueOf(20));
-		assertTrue(testObj.saveDone);
+		testObj.get(Integer.class, "20");
+	}
+
+	@Test
+	public void testGetClosed() {
+		expectedException.expect(VirpOperationException.class);
+		expectedException.expectMessage("Session has been closed");
+
 		testObj.close();
-		testObj.save(Integer.valueOf(21));
+
+		testObj.get(Integer.class, Integer.valueOf(20));
+	}
+
+	@Test
+	public void testGet() {
+		RowMapperMetaData<Object> meta = createNiceMock(RowMapperMetaData.class);
+		expect(config.getMetaData(Object.class)).andReturn(meta).once();
+		replay(config);
+
+		testObj.getReturns = new Object();
+
+		Object result = testObj.get(Object.class, "foo");
+		assertSame(testObj.getReturns, result);
+	}
+
+	@Test
+	public void testGetAsListUnconfigured() {
+		expectedException.expect(VirpOperationException.class);
+		expectedException.expectMessage("Unconfigured class java.lang.Integer");
+
+		testObj.get(Integer.class, "20", "20");
+	}
+
+	@Test
+	public void testGetAsListClosed() {
+		expectedException.expect(VirpOperationException.class);
+		expectedException.expectMessage("Session has been closed");
+
+		testObj.close();
+
+		testObj.get(Integer.class, "foo", "bar");
+	}
+
+	@Test
+	public void testGetAsList() {
+		RowMapperMetaData<Object> meta = createMock(RowMapperMetaData.class);
+		expect(config.getMetaData(Object.class)).andReturn(meta).once();
+		replay(config, meta);
+
+		Object foo = new Object();
+		Object bar = new Object();
+		testObj.getManyReturns = Arrays.asList(foo, bar);
+
+		List result = testObj.get(Object.class, "foo", "bar");
+		assertSame(testObj.getManyReturns, result);
+		assertEquals(2, result.size());
+		assertSame(foo, result.get(0));
+		assertSame(bar, result.get(1));
+		verify(config, meta);
+	}
+
+	@Test
+	public void testGetAsMapUnconfigured() {
+		expectedException.expect(VirpOperationException.class);
+		expectedException.expectMessage("Unconfigured class java.lang.Integer");
+
+		testObj.getAsMap(Integer.class, "20", "20");
+	}
+
+	@Test
+	public void testGetAsMapClosed() {
+		expectedException.expect(VirpOperationException.class);
+		expectedException.expectMessage("Session has been closed");
+
+		testObj.close();
+
+		testObj.getAsMap(Integer.class, "foo", "bar");
+	}
+
+	@Test
+	public void testGetAsMap() {
+		Object foo = new Object();
+		Object bar = new Object();
+		RowMapperMetaData<Object> meta = createMock(RowMapperMetaData.class);
+		ValueManipulator<String> keyAccessor = createMock(ValueManipulator.class);
+		expect(meta.<String>getKeyValueManipulator()).andReturn(keyAccessor).once();
+		expect(keyAccessor.getValue(foo)).andReturn("foo").once();
+		expect(keyAccessor.getValue(bar)).andReturn("bar").once();
+		expect(config.getMetaData(Object.class)).andReturn(meta).once();
+		replay(config, meta, keyAccessor);
+
+		testObj.getManyReturns = Arrays.asList(foo, bar);
+
+		Map<String, Object> result = testObj.getAsMap(Object.class, "foo", "bar");
+
+		assertEquals(2, result.size());
+		assertSame(foo, result.get("foo"));
+		assertSame(bar, result.get("bar"));
+		verify(config, meta, keyAccessor);
 	}
 
 	@Test

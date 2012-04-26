@@ -41,8 +41,8 @@ public class RowMapperMetaData<T> {
 		this.columnAccessors = Collections.unmodifiableSet(columnAccessors);
 	}
 
-	public ValueManipulator<?> getKeyValueManipulator() {
-		return keyValueManipulator;
+	public <T> ValueManipulator<T> getKeyValueManipulator() {
+		return (ValueManipulator<T>) keyValueManipulator;
 	}
 
 	public void setKeyValueManipulator(ValueManipulator<?> keyValueManipulator) {
