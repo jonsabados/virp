@@ -93,6 +93,37 @@ public class VirpHectorITCase {
 		@NumberedColumn(number = 10)
 		private long columnTen;
 
+		public String getKey() {
+			return key;
+		}
+
+		public void setKey(String key) {
+			this.key = key;
+		}
+
+		public String getColumnOne() {
+			return columnOne;
+		}
+
+		public void setColumnOne(String columnOne) {
+			this.columnOne = columnOne;
+		}
+
+		public String getColumnTwo() {
+			return columnTwo;
+		}
+
+		public void setColumnTwo(String columnTwo) {
+			this.columnTwo = columnTwo;
+		}
+
+		public long getColumnTen() {
+			return columnTen;
+		}
+
+		public void setColumnTen(long columnTen) {
+			this.columnTen = columnTen;
+		}
 	}
 
 	@Test

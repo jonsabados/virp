@@ -29,7 +29,7 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 	}
 
 	@RowMapper(columnFamily = "dontCare")
-	private static class BadKeyTester {
+	public static class BadKeyTester {
 
 		@KeyColumn
 		@SuppressWarnings("unused")  // reflection
@@ -48,6 +48,14 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 		public void setKey(String key) {
 			this.key = key;
 		}
+
+		public String getWrench() {
+			return wrench;
+		}
+
+		public void setWrench(String wrench) {
+			this.wrench = wrench;
+		}
 	}
 
 	@Test
@@ -58,13 +66,20 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 	}
 
 	@RowMapper(columnFamily = "dontCare")
-	private static class OkPropertyKeyTester {
+	public static class OkPropertyKeyTester {
 
 		@KeyColumn
 		@NamedColumn(name = "foo")
 		@SuppressWarnings("unused") // reflection
 		private String key;
 
+		public String getKey() {
+			return key;
+		}
+
+		public void setKey(String key) {
+			this.key = key;
+		}
 	}
 
 	@Test
@@ -82,12 +97,19 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 	}
 
 	@RowMapper(columnFamily = "dontCare")
-	private static class NumberedColumnPropertyTester {
+	public static class NumberedColumnPropertyTester {
 
 		@NumberedColumn(number = 10)
 		@SuppressWarnings("unused") // reflection
 		private String key;
 
+		public String getKey() {
+			return key;
+		}
+
+		public void setKey(String key) {
+			this.key = key;
+		}
 	}
 
 	@Test
@@ -103,7 +125,7 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 	}
 
 	@RowMapper(columnFamily = "dontCare")
-	private static class NumberedColumnMethodTester {
+	public static class NumberedColumnMethodTester {
 
 		private String key;
 
@@ -132,7 +154,7 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 
 
 	@RowMapper(columnFamily = "dontCare")
-	private static class OkMethodKeyTester {
+	public static class OkMethodKeyTester {
 
 		private String key;
 
