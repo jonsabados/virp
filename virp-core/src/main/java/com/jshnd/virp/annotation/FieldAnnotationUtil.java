@@ -8,13 +8,13 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
-public class FieldAnnotationUtil implements AnnotationUtil {
+class FieldAnnotationUtil implements AnnotationUtil {
 
 	private Field field;
 
 	private Class<?> classFor;
 
-	public FieldAnnotationUtil(Field field, Class<?> classFor) {
+	FieldAnnotationUtil(Field field, Class<?> classFor) {
 		this.field = field;
 		this.classFor = classFor;
 	}

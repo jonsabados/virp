@@ -1,5 +1,6 @@
 package com.jshnd.virp.reflection;
 
+import com.jshnd.virp.annotation.KeyColumn;
 import com.jshnd.virp.annotation.NamedColumn;
 import com.jshnd.virp.annotation.RowMapper;
 
@@ -8,6 +9,7 @@ public class SomeBean {
 
 	private String someProperty;
 
+	@KeyColumn
 	@NamedColumn(name = "foo")
 	private String columnProperty;
 

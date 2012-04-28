@@ -28,9 +28,9 @@ public class AnnotationDrivenRowMapperMetaDataReader implements RowMapperMetaDat
 	public <T> RowMapperMetaData<T> readClass(Class<T> clazz) {
 		RowMapperMetaData<T> ret = new RowMapperMetaData<T>(clazz);
 		RowMapper mapperAnnotation = clazz.getAnnotation(RowMapper.class);
-		if (null == mapperAnnotation) {
+		if (mapperAnnotation == null) {
 			throw new VirpAnnotationException(clazz.getCanonicalName() +
-					" missing required annotation: " + RowMapper.class.getCanonicalName());
+					" missing required annotation " + RowMapper.class.getCanonicalName());
 		}
 		ret.setColumnFamily(mapperAnnotation.columnFamily());
 		Set<ColumnAccessor<?, ?>> getters = new HashSet<ColumnAccessor<?, ?>>();
@@ -39,6 +39,10 @@ public class AnnotationDrivenRowMapperMetaDataReader implements RowMapperMetaDat
 		}
 		if (readProperties) {
 			generatePropertyGetters(clazz, ret, getters);
+		}
+		if (ret.getKeyValueManipulator() == null) {
+			throw new VirpAnnotationException(clazz.getCanonicalName() +
+					" missing required annotation " + KeyColumn.class.getCanonicalName());
 		}
 		ret.setColumnAccessors(getters);
 		return ret;

@@ -22,7 +22,7 @@ public final class ReflectionUtil {
 			setterName = name.replaceFirst("is", "set");
 		}
 
-		return clazz.getDeclaredMethod(setterName, getter.getReturnType());
+		return clazz.getMethod(setterName, getter.getReturnType());
 	}
 
 }

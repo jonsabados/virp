@@ -6,13 +6,13 @@ import com.jshnd.virp.reflection.ReflectionUtil;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 
-public class MethodAnnotationUtil implements AnnotationUtil {
+class MethodAnnotationUtil implements AnnotationUtil {
 
 	private Method method;
 
 	private Class<?> classFor;
 
-	public MethodAnnotationUtil(Method method, Class<?> classFor) {
+	MethodAnnotationUtil(Method method, Class<?> classFor) {
 		this.method = method;
 		this.classFor = classFor;
 	}
@@ -31,9 +31,9 @@ public class MethodAnnotationUtil implements AnnotationUtil {
 	public Method getSetMethod() {
 		try {
 			return ReflectionUtil.getSetter(classFor, method);
-		} catch (Exception e) {
+		} catch (NoSuchMethodException e) {
 			throw new VirpAnnotationException("setter for getter " + method.getName() + " not found on class "
-					+ method.getClass().getCanonicalName());
+					+ classFor.getCanonicalName());
 		}
 	}
 }

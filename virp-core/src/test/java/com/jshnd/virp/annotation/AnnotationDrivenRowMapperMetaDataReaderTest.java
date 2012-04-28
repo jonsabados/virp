@@ -16,6 +16,7 @@ import java.util.Set;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+@SuppressWarnings("unused")
 public class AnnotationDrivenRowMapperMetaDataReaderTest {
 
 	private AnnotationDrivenRowMapperMetaDataReader testObj;
@@ -32,19 +33,15 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 	public static class BadKeyTester {
 
 		@KeyColumn
-		@SuppressWarnings("unused")  // reflection
 		private String wrench;
 
-		@SuppressWarnings("unused") // meh.
 		private String key;
 
 		@KeyColumn
-		@SuppressWarnings("unused")  // reflection
 		public String getKey() {
 			return key;
 		}
 
-		@SuppressWarnings("unused")  // reflection
 		public void setKey(String key) {
 			this.key = key;
 		}
@@ -70,7 +67,6 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 
 		@KeyColumn
 		@NamedColumn(name = "foo")
-		@SuppressWarnings("unused") // reflection
 		private String key;
 
 		public String getKey() {
@@ -99,8 +95,8 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 	@RowMapper(columnFamily = "dontCare")
 	public static class NumberedColumnPropertyTester {
 
+		@KeyColumn
 		@NumberedColumn(number = 10)
-		@SuppressWarnings("unused") // reflection
 		private String key;
 
 		public String getKey() {
@@ -129,8 +125,8 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 
 		private String key;
 
+		@KeyColumn
 		@NumberedColumn(number = 10)
-		@SuppressWarnings("unused") // reflection
 		public String getKey() {
 			return key;
 		}
@@ -160,7 +156,6 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 
 		@KeyColumn
 		@NamedColumn(name = "foo")
-		@SuppressWarnings("unused")  // reflection
 		public String getKey() {
 			return key;
 		}
@@ -186,6 +181,16 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 	@RowMapper(columnFamily = "testIng")
 	public static class ColumnFamilyTester {
 
+		@KeyColumn
+		private String key;
+
+		public String getKey() {
+			return key;
+		}
+
+		public void setKey(String key) {
+			this.key = key;
+		}
 	}
 
 	@Test
@@ -199,24 +204,61 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 	}
 
 	@Test
-	public void testColumnFamilyMissing() {
+	public void testRowMapperMissing() {
 		expectedException.expect(VirpAnnotationException.class);
 		expectedException.expectMessage(MissingAnnotationTester.class.getCanonicalName() +
-				" missing required annotation: " + RowMapper.class.getCanonicalName());
+				" missing required annotation " + RowMapper.class.getCanonicalName());
 		testObj.readClass(MissingAnnotationTester.class);
+	}
+
+	@RowMapper(columnFamily = "SomeBean")
+	public static class MethodOnlyReadingTester {
+
+		private String someProperty;
+
+		private String columnProperty;
+
+		private String methodProperty;
+
+		public String getSomeProperty() {
+			return someProperty;
+		}
+
+		public void setSomeProperty(String someProperty) {
+			this.someProperty = someProperty;
+		}
+
+		@KeyColumn
+		@NamedColumn(name = "bar")
+		public String getMethodProperty() {
+			return methodProperty;
+		}
+
+		public void setMethodProperty(String methodProperty) {
+			this.methodProperty = methodProperty;
+		}
+
+		public String getColumnProperty() {
+			return columnProperty;
+		}
+
+		public void setColumnProperty(String columnProperty) {
+			this.columnProperty = columnProperty;
+		}
+
 	}
 
 	@Test
 	public void testReadClassMethodsOnly() {
 		testObj.setReadProperties(false);
-		RowMapperMetaData meta = testObj.readClass(SomeBean.class);
-		assertEquals(SomeBean.class, meta.getRowMapperClass());
+		RowMapperMetaData meta = testObj.readClass(MethodOnlyReadingTester.class);
+		assertEquals(MethodOnlyReadingTester.class, meta.getRowMapperClass());
 		Set<ColumnAccessor<?,?>> valueAccessors = meta.getColumnAccessors();
 		assertEquals(1, valueAccessors.size());
 		ColumnAccessor getter = Iterables.getFirst(valueAccessors, null);
 		assertNotNull(getter);
 
-		SomeBean source = new SomeBean();
+		MethodOnlyReadingTester source = new MethodOnlyReadingTester();
 		source.setSomeProperty("notme");
 		source.setMethodProperty("fooBar!");
 
@@ -242,6 +284,164 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 		assertEquals("foo", getter.getColumnIdentifier().getValue());
 		assertEquals(String.class, getter.getValueManipulator().getValueType());
 		assertEquals("fooBar!", getter.getValueManipulator().getValue(source));
+	}
+
+	@RowMapper(columnFamily = "foo")
+	public static class MissingKeyColumnAnnotationTester {
+
+		private String key;
+
+		private String column;
+
+		public String getKey() {
+			return key;
+		}
+
+		public void setKey(String key) {
+			this.key = key;
+		}
+
+		@NamedColumn(name = "foo")
+		public String getColumn() {
+			return column;
+		}
+
+		public void setColumn(String column) {
+			this.column = column;
+		}
+	}
+
+	@Test
+	public void testMissingKeColumnAnnotation() {
+		expectedException.expect(VirpAnnotationException.class);
+		expectedException.expectMessage(MissingKeyColumnAnnotationTester.class.getCanonicalName()
+				+ " missing required annotation " + KeyColumn.class.getCanonicalName());
+		testObj.readClass(MissingKeyColumnAnnotationTester.class);
+	}
+
+	@RowMapper(columnFamily = "foo")
+	public static class GetterWithoutSetterMethodTester {
+
+		private String key;
+
+		private String column;
+
+		@KeyColumn
+		public String getKey() {
+			return key;
+		}
+
+		public void setKey(String key) {
+			this.key = key;
+		}
+
+		@NamedColumn(name = "foo")
+		public String getColumn() {
+			return column;
+		}
+	}
+
+	@Test
+	public void testMissingGetterOnMethodAnnotation() {
+		expectedException.expect(VirpAnnotationException.class);
+		expectedException.expectMessage("setter for getter getColumn not found on class "
+				+ GetterWithoutSetterMethodTester.class.getCanonicalName());
+		testObj.readClass(GetterWithoutSetterMethodTester.class);
+	}
+
+	@RowMapper(columnFamily = "foo")
+	public static class GetterWithoutAccessibleSetterMethodTester {
+
+		private String key;
+
+		private String column;
+
+		@KeyColumn
+		public String getKey() {
+			return key;
+		}
+
+		public void setKey(String key) {
+			this.key = key;
+		}
+
+		@NamedColumn(name = "foo")
+		public String getColumn() {
+			return column;
+		}
+
+		private void setColumn(String column) {
+			this.column = column;
+		}
+
+	}
+
+	@Test
+	public void testInacessibleGetterOnMethodAnnotation() {
+		expectedException.expect(VirpAnnotationException.class);
+		expectedException.expectMessage("setter for getter getColumn not found on class "
+				+ GetterWithoutAccessibleSetterMethodTester.class.getCanonicalName());
+		testObj.readClass(GetterWithoutAccessibleSetterMethodTester.class);
+	}
+
+	@RowMapper(columnFamily = "foo")
+	public static class PropertyWithoutAccessibleGetterMethodTester {
+
+		@KeyColumn
+		private String key;
+
+		@NamedColumn(name = "foo")
+		private String column;
+
+		public String getKey() {
+			return key;
+		}
+
+		public void setKey(String key) {
+			this.key = key;
+		}
+
+		public void setColumn(String column) {
+			this.column = column;
+		}
+
+	}
+
+	@Test
+	public void testMissingGetterOnFieldAnnotation() {
+		expectedException.expect(VirpAnnotationException.class);
+		expectedException.expectMessage("Getter for field column not found");
+		testObj.readClass(PropertyWithoutAccessibleGetterMethodTester.class);
+	}
+
+	@RowMapper(columnFamily = "foo")
+	public static class PropertyWithoutAccessibleSetterMethodTester {
+
+		@KeyColumn
+		private String key;
+
+		@NamedColumn(name = "foo")
+		private String column;
+
+		public String getKey() {
+			return key;
+		}
+
+		public void setKey(String key) {
+			this.key = key;
+		}
+
+		public String getColumn() {
+			return column;
+		}
+
+	}
+
+	@Test
+	public void testMissingSetterOnFieldAnnotation() {
+		expectedException.expect(VirpAnnotationException.class);
+		expectedException.expectMessage("Setter for field column not found");
+		testObj.readClass(PropertyWithoutAccessibleSetterMethodTester.class);
 	}
 
 }
