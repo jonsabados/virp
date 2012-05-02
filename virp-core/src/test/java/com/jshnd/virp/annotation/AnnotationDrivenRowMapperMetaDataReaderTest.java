@@ -148,6 +148,33 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 		assertEquals("fooBar", getter.getValueManipulator().getValue(bean));
 	}
 
+	@RowMapper(columnFamily = "dontCare")
+	public static class BooleanColumnMethodTester {
+
+		private boolean key;
+
+		@KeyColumn
+		@NamedColumn(name = "foo")
+		public boolean isKey() {
+			return key;
+		}
+
+		public void setKey(boolean key) {
+			this.key = key;
+		}
+	}
+
+	@Test
+	public void testBooleanMethod() {
+		RowMapperMetaData<BooleanColumnMethodTester> meta = testObj.readClass(BooleanColumnMethodTester.class);
+		BooleanColumnMethodTester bean = new BooleanColumnMethodTester();
+		bean.setKey(true);
+		assertEquals(1, meta.getColumnAccessors().size());
+		ColumnAccessor getter = Iterables.getFirst(meta.getColumnAccessors(), null);
+		assertEquals("foo", getter.getColumnIdentifier().getValue());
+		assertEquals(String.class, getter.getColumnIdentifier().getValueType());
+		assertEquals(Boolean.TRUE, getter.getValueManipulator().getValue(bean));
+	}
 
 	@RowMapper(columnFamily = "dontCare")
 	public static class OkMethodKeyTester {
@@ -210,6 +237,8 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 				" missing required annotation " + RowMapper.class.getCanonicalName());
 		testObj.readClass(MissingAnnotationTester.class);
 	}
+
+
 
 	@RowMapper(columnFamily = "SomeBean")
 	public static class MethodOnlyReadingTester {

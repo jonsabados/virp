@@ -1,5 +1,12 @@
 package com.jshnd.virp;
 
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
+import com.jshnd.virp.annotation.AnnotationDrivenRowMapperMetaDataReader;
+import com.jshnd.virp.annotation.KeyColumn;
+import com.jshnd.virp.annotation.NamedColumn;
+import com.jshnd.virp.annotation.RowMapper;
+import com.jshnd.virp.config.ConfiguredRowMapperSource;
 import com.jshnd.virp.config.RowMapperMetaData;
 import com.jshnd.virp.exception.VirpOperationException;
 import org.junit.Before;
@@ -10,6 +17,7 @@ import org.junit.rules.ExpectedException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.easymock.EasyMock.*;
 import static org.junit.Assert.*;
@@ -67,12 +75,20 @@ public class VirpSessionTest {
 
 	@Before
 	public void setup() {
+		testObj = null;
+		config = null;
+	}
+
+	private void basicSetup() {
 		config = createMock(VirpConfig.class);
+		expect(config.isSessionAttachmentOn()).andReturn(false).once();
 		testObj = new TestSession(config);
+		reset(config);
 	}
 
 	@Test
 	public void testSaveUnconfigured() {
+		basicSetup();
 		expectedException.expect(VirpOperationException.class);
 		expectedException.expectMessage("Unconfigured class java.lang.Integer");
 
@@ -81,6 +97,7 @@ public class VirpSessionTest {
 
 	@Test
 	public void testSaveClosed() {
+		basicSetup();
 		expectedException.expect(VirpOperationException.class);
 		expectedException.expectMessage("Session has been closed");
 
@@ -91,6 +108,7 @@ public class VirpSessionTest {
 
 	@Test
 	public void testSave() {
+		basicSetup();
 		expectedException.expect(VirpOperationException.class);
 		expectedException.expectMessage("Session has been closed");
 
@@ -106,6 +124,7 @@ public class VirpSessionTest {
 
 	@Test
 	public void testGetUnconfigured() {
+		basicSetup();
 		expectedException.expect(VirpOperationException.class);
 		expectedException.expectMessage("Unconfigured class java.lang.Integer");
 
@@ -114,6 +133,7 @@ public class VirpSessionTest {
 
 	@Test
 	public void testGetClosed() {
+		basicSetup();
 		expectedException.expect(VirpOperationException.class);
 		expectedException.expectMessage("Session has been closed");
 
@@ -124,8 +144,10 @@ public class VirpSessionTest {
 
 	@Test
 	public void testGet() {
+		basicSetup();
 		RowMapperMetaData<Object> meta = createNiceMock(RowMapperMetaData.class);
 		expect(config.getMetaData(Object.class)).andReturn(meta).once();
+		expect(config.isSessionAttachmentOn()).andReturn(false).once();
 		replay(config);
 
 		testObj.getReturns = new Object();
@@ -136,6 +158,7 @@ public class VirpSessionTest {
 
 	@Test
 	public void testGetAsListUnconfigured() {
+		basicSetup();
 		expectedException.expect(VirpOperationException.class);
 		expectedException.expectMessage("Unconfigured class java.lang.Integer");
 
@@ -144,6 +167,7 @@ public class VirpSessionTest {
 
 	@Test
 	public void testGetAsListClosed() {
+		basicSetup();
 		expectedException.expect(VirpOperationException.class);
 		expectedException.expectMessage("Session has been closed");
 
@@ -154,8 +178,10 @@ public class VirpSessionTest {
 
 	@Test
 	public void testGetAsList() {
+		basicSetup();
 		RowMapperMetaData<Object> meta = createMock(RowMapperMetaData.class);
 		expect(config.getMetaData(Object.class)).andReturn(meta).once();
+		expect(config.isSessionAttachmentOn()).andReturn(false).once();
 		replay(config, meta);
 
 		Object foo = new Object();
@@ -172,6 +198,7 @@ public class VirpSessionTest {
 
 	@Test
 	public void testGetAsMapUnconfigured() {
+		basicSetup();
 		expectedException.expect(VirpOperationException.class);
 		expectedException.expectMessage("Unconfigured class java.lang.Integer");
 
@@ -180,6 +207,7 @@ public class VirpSessionTest {
 
 	@Test
 	public void testGetAsMapClosed() {
+		basicSetup();
 		expectedException.expect(VirpOperationException.class);
 		expectedException.expectMessage("Session has been closed");
 
@@ -190,6 +218,8 @@ public class VirpSessionTest {
 
 	@Test
 	public void testGetAsMap() {
+		basicSetup();
+
 		Object foo = new Object();
 		Object bar = new Object();
 		RowMapperMetaData<Object> meta = createMock(RowMapperMetaData.class);
@@ -212,12 +242,141 @@ public class VirpSessionTest {
 
 	@Test
 	public void testClose() {
+		basicSetup();
 		expectedException.expect(VirpOperationException.class);
 		expectedException.expectMessage("Session has been closed");
 
 		testObj.close();
 		assertTrue(testObj.closed);
 		testObj.close();
+	}
+
+	@RowMapper(columnFamily = "someFamily")
+	public static class ProxiedGetTester {
+
+		@KeyColumn
+		private String key;
+
+		@NamedColumn(name = "foo")
+		private String valueOne;
+
+		@NamedColumn(name = "bar")
+		private String valueTwo;
+
+		private String notMapped;
+
+		public String getKey() {
+			return key;
+		}
+
+		public void setKey(String key) {
+			this.key = key;
+		}
+
+		public String getValueOne() {
+			return valueOne;
+		}
+
+		public void setValueOne(String valueOne) {
+			this.valueOne = valueOne;
+		}
+
+		public String getValueTwo() {
+			return valueTwo;
+		}
+
+		public void setValueTwo(String valueTwo) {
+			this.valueTwo = valueTwo;
+		}
+
+		public String getNotMapped() {
+			return notMapped;
+		}
+
+		public void setNotMapped(String notMapped) {
+			this.notMapped = notMapped;
+		}
+	}
+
+	private void setupProxied() {
+		VirpSessionFactory factory = createMock(VirpSessionFactory.class);
+		VirpConfig config = new VirpConfig();
+		config.setSessionFactory(factory);
+		config.setSessionAttachmentOn(true);
+		ConfiguredRowMapperSource source = new ConfiguredRowMapperSource();
+		source.setRowMapperClasses(Sets.<Class<?>>newHashSet(ProxiedGetTester.class));
+		config.setMetaDataReader(new AnnotationDrivenRowMapperMetaDataReader());
+		config.setRowMapperSource(source);
+		config.init();
+
+		testObj = new TestSession(config);
+	}
+
+	@Test
+	public void testProxiedGet() throws Exception {
+		setupProxied();
+		ProxiedGetTester testRow = new ProxiedGetTester();
+		testRow.setKey("abc");
+		testRow.setValueOne("one");
+		testRow.setValueTwo("two");
+		testObj.getReturns = testRow;
+
+		ProxiedGetTester result = testObj.get(ProxiedGetTester.class, "abc");
+
+		runProxyTests(result, testRow);
+	}
+
+	@Test
+	public void testProxiedList() throws Exception {
+		setupProxied();
+		ProxiedGetTester testRow1 = new ProxiedGetTester();
+		testRow1.setKey("abc");
+		testRow1.setValueOne("one");
+		testRow1.setValueTwo("two");
+		ProxiedGetTester testRow2 = new ProxiedGetTester();
+		testRow2.setKey("dabc");
+		testRow2.setValueOne("oned");
+		testRow2.setValueTwo("twoo");
+		testObj.getManyReturns = Arrays.<Object>asList(testRow1, testRow2);
+
+		List<ProxiedGetTester> result = testObj.get(ProxiedGetTester.class, "abc", "dabc");
+
+		assertEquals(2, result.size());
+		runProxyTests(result.get(0), testRow1);
+		runProxyTests(result.get(1), testRow2);
+	}
+
+	private void runProxyTests(ProxiedGetTester fromSession, ProxiedGetTester base) {
+
+		assertNotSame(fromSession, base);
+
+		assertEquals(base.getKey(), fromSession.getKey());
+		assertEquals(base.getValueOne(), fromSession.getValueOne());
+		assertEquals(base.getValueTwo(), fromSession.getValueTwo());
+
+		fromSession.setValueOne(base.getKey() + "Modification");
+		fromSession.setNotMapped("shouldntmatter");
+
+		Map<Object, Set<ColumnAccessor<?, ?>>> modifications = testObj.getObjectModifications();
+		assertTrue(modifications.containsKey(base));
+		Set<ColumnAccessor<?,?>> modified = modifications.get(base);
+		assertNotNull(modified);
+		assertEquals(1, modified.size());
+		ColumnAccessor<?, ?> column = Iterables.getFirst(modified, null);
+		assertNotNull(column);
+		assertEquals("foo", column.getColumnIdentifier().getValue());
+		assertEquals(base.getKey() + "Modification", column.getValueManipulator().getValue(base));
+
+		boolean exceptionCaught = false;
+		try {
+			fromSession.setKey("-NONONONO-");
+		} catch(VirpOperationException e) {
+			assertEquals("Attempt to modify key for "
+					+ ProxiedGetTester.class.getCanonicalName()
+					+ ", key value: " + base.getKey(), e.getMessage());
+			exceptionCaught = true;
+		}
+		assertTrue(exceptionCaught);
 	}
 
 }

@@ -75,10 +75,10 @@ public class AnnotationDrivenRowMapperMetaDataReader implements RowMapperMetaDat
 
 	private void generateMethodGetters(Class<?> clazz, RowMapperMetaData meta,
 									   Set<ColumnAccessor<?, ?>> valueAccessors) {
-		Method[] methods = clazz.getDeclaredMethods();
+		Method[] methods = clazz.getMethods();
 		log.info("Inspecting " + methods.length + " for annotation " + NamedColumn.class.getCanonicalName());
 		for (Method method : methods) {
-			if(method.getName().startsWith("get")) {
+			if(method.getName().startsWith("get") || method.getName().startsWith("is")) {
 				processGetter(new MethodAnnotationUtil(method, clazz), meta, valueAccessors);
 			}
 		}

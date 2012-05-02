@@ -1,8 +1,8 @@
 package com.jshnd.virp.exception;
 
-import com.jshnd.virp.exception.VirpException;
-
 public class VirpOperationException extends VirpException {
+
+	private static final long serialVersionUID = 1L;
 
 	public VirpOperationException() {
 	}

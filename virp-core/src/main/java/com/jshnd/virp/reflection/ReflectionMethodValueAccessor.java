@@ -38,4 +38,10 @@ public class ReflectionMethodValueAccessor<T> extends BaseValueManipulator<T> {
 	public Class<T> getValueType() {
 		return (Class<T>) getterMethod.getReturnType();
 	}
+
+	@Override
+	public Method getSetter() {
+		return setterMethod;
+	}
+
 }

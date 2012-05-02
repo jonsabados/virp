@@ -28,6 +28,8 @@ public class VirpConfig {
 
 	private boolean noColumnsEqualsNullRow = false;
 
+	private boolean sessionAttachmentOn = false;
+
 	public VirpSession newSession() {
 		if(!initialized) {
 			throw new VirpException("Session has not been initialized - call init() first.");
@@ -91,6 +93,14 @@ public class VirpConfig {
 
 	public void setNoColumnsEqualsNullRow(boolean noColumnsEqualsNullRow) {
 		this.noColumnsEqualsNullRow = noColumnsEqualsNullRow;
+	}
+
+	public boolean isSessionAttachmentOn() {
+		return sessionAttachmentOn;
+	}
+
+	public void setSessionAttachmentOn(boolean sessionAttachmentOn) {
+		this.sessionAttachmentOn = sessionAttachmentOn;
 	}
 
 	protected Map<Class<?>, RowMapperMetaData> getConfiguredClasses() {
