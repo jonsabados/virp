@@ -8,6 +8,8 @@ import me.prettyprint.cassandra.serializers.StringSerializer;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.lang.reflect.Method;
+
 import static org.junit.Assert.assertSame;
 
 public class HectorSessionFactoryTest {
@@ -40,6 +42,11 @@ public class HectorSessionFactoryTest {
 		@Override
 		public Class<T> getValueType() {
 			return type;
+		}
+
+		@Override
+		public Method getSetter() {
+			return null;
 		}
 	}
 
