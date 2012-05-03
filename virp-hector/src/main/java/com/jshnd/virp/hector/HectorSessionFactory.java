@@ -1,11 +1,13 @@
 package com.jshnd.virp.hector;
 
-import com.jshnd.virp.*;
+import com.jshnd.virp.ColumnAccessor;
+import com.jshnd.virp.SessionFactoryDataHolder;
+import com.jshnd.virp.VirpConfig;
+import com.jshnd.virp.VirpSessionFactory;
 import com.jshnd.virp.config.RowMapperMetaData;
+import com.jshnd.virp.config.SessionAttachmentMode;
 import me.prettyprint.cassandra.serializers.*;
 import me.prettyprint.hector.api.Keyspace;
-import me.prettyprint.hector.api.factory.HFactory;
-import me.prettyprint.hector.api.mutation.Mutator;
 
 public class HectorSessionFactory implements VirpSessionFactory {
 
@@ -13,9 +15,8 @@ public class HectorSessionFactory implements VirpSessionFactory {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public HectorSession newSession(VirpConfig config) {
-		Mutator<byte[]> mutator = HFactory.createMutator(keyspace, BytesArraySerializer.get());
-		return new HectorSession(config, mutator, keyspace);
+	public HectorSession newSession(VirpConfig config, SessionAttachmentMode attachmentMode) {
+		return new HectorSession(config, attachmentMode, keyspace);
 	}
 
 	@Override

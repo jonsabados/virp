@@ -2,6 +2,7 @@ package com.jshnd.virp.hector;
 
 import com.jshnd.virp.*;
 import com.jshnd.virp.config.RowMapperMetaData;
+import com.jshnd.virp.config.SessionAttachmentMode;
 import com.jshnd.virp.exception.VirpException;
 import me.prettyprint.cassandra.serializers.BytesArraySerializer;
 import me.prettyprint.hector.api.Keyspace;
@@ -21,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -32,20 +34,30 @@ public class HectorSession extends VirpSession {
 
 	private Keyspace keyspace;
 
-	public HectorSession(VirpConfig config, Mutator<byte[]> mutator, Keyspace keyspace) {
-		super(config);
-		this.mutator = mutator;
+	public HectorSession(VirpConfig config, SessionAttachmentMode attachmentMode, Keyspace keyspace) {
+		super(config, attachmentMode);
 		this.keyspace = keyspace;
+		this.mutator = HFactory.createMutator(keyspace, BytesArraySerializer.get());
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	protected <T> void doSave(RowMapperMetaData<T> type, T row) {
+		addColumns(type, row, type.getColumnAccessors());
+	}
+
+	@Override
+	protected <T> void doChange(RowMapperMetaData<T> type, T row, ColumnAccessor<?, ?> accessor) {
+		Set<ColumnAccessor<?, ?>> accessors = new HashSet<ColumnAccessor<?, ?>>(1);
+		accessors.add(accessor);
+		addColumns(type, row, accessors);
+	}
+
+	@SuppressWarnings("unchecked")
+	private <T> void addColumns(RowMapperMetaData<T> type, T row, Set<ColumnAccessor<?, ?>> accessors) {
 		String columnFamily = type.getColumnFamily();
 		ValueAccessor<?> keyAccessor = type.getKeyValueManipulator();
 		Serializer keySerializer = (Serializer) keyAccessor.getSessionFactoryData();
 		byte[] key = keySerializer.toBytes(keyAccessor.getValue(row));
-		Set<ColumnAccessor<?,?>> accessors = type.getColumnAccessors();
 		for(ColumnAccessor<?, ?> accessor : accessors) {
 			StaticValueAccessor<?> identifier = accessor.getColumnIdentifier();
 			ValueAccessor<?> value = accessor.getValueManipulator();
@@ -168,7 +180,7 @@ public class HectorSession extends VirpSession {
 	}
 
 	@Override
-	public HectorActionResult doClose() throws VirpException {
+	public HectorActionResult doFlush() throws VirpException {
 		try {
 			MutationResult result = mutator.execute();
 			if (log.isDebugEnabled()) {

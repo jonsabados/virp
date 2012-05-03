@@ -5,6 +5,7 @@ import com.jshnd.virp.VirpConfig;
 import com.jshnd.virp.VirpSession;
 import com.jshnd.virp.annotation.*;
 import com.jshnd.virp.config.ConfiguredRowMapperSource;
+import com.jshnd.virp.config.SessionAttachmentMode;
 import me.prettyprint.cassandra.model.BasicColumnFamilyDefinition;
 import me.prettyprint.cassandra.model.BasicKeyspaceDefinition;
 import me.prettyprint.cassandra.serializers.LongSerializer;
@@ -78,6 +79,7 @@ public class VirpHectorITCase {
 		config.init();
 	}
 
+	@SuppressWarnings("unused")
 	@RowMapper(columnFamily = "BasicTestObject")
 	public static class BasicSaveObject {
 
@@ -173,6 +175,39 @@ public class VirpHectorITCase {
 		assertEquals(21, res.columnTen);
 
 		session.close();
+	}
+
+	@Test
+	public void testChanges() {
+		Mutator<String> mutator = HFactory.createMutator(testKeyspace, StringSerializer.get());
+		createBasicTestObject(mutator, "changes", "of", "ta", Long.valueOf(21));
+		mutator.execute();
+
+		VirpSession session = config.newSession(SessionAttachmentMode.AUTO_FLUSH);
+		BasicSaveObject res = session.get(BasicSaveObject.class, "changes");
+		res.setColumnOne("itsbeenchanged");
+		res.setColumnTwo("soHasThis");
+
+		Serializer<String> stringSerializer = StringSerializer.get();
+		SliceQuery<String, String, String> query =
+				HFactory.createSliceQuery(testKeyspace, stringSerializer, stringSerializer, stringSerializer);
+		query.setColumnFamily("BasicTestObject");
+		query.setKey("changes");
+		query.setColumnNames("columnOne", "columnTwo");
+		QueryResult<ColumnSlice<String, String>> result = query.execute();
+		assertEquals("of", result.get().getColumnByName("columnOne").getValue());
+		assertEquals("ta", result.get().getColumnByName("columnTwo").getValue());
+
+		session.close();
+
+		query =
+				HFactory.createSliceQuery(testKeyspace, stringSerializer, stringSerializer, stringSerializer);
+		query.setColumnFamily("BasicTestObject");
+		query.setKey("changes");
+		query.setColumnNames("columnOne", "columnTwo");
+		result = query.execute();
+		assertEquals("itsbeenchanged", result.get().getColumnByName("columnOne").getValue());
+		assertEquals("soHasThis", result.get().getColumnByName("columnTwo").getValue());
 	}
 
 	@Test

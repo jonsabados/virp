@@ -3,6 +3,7 @@ package com.jshnd.virp;
 import com.jshnd.virp.config.RowMapperMetaData;
 import com.jshnd.virp.config.RowMapperMetaDataReader;
 import com.jshnd.virp.config.RowMapperSource;
+import com.jshnd.virp.config.SessionAttachmentMode;
 import com.jshnd.virp.exception.VirpException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,13 +29,17 @@ public class VirpConfig {
 
 	private boolean noColumnsEqualsNullRow = false;
 
-	private boolean sessionAttachmentOn = false;
+	private SessionAttachmentMode defaultSessionAttachmentMode = SessionAttachmentMode.NONE;
 
 	public VirpSession newSession() {
+		return newSession(defaultSessionAttachmentMode);
+	}
+
+	public VirpSession newSession(SessionAttachmentMode attachmentMode) {
 		if(!initialized) {
 			throw new VirpException("Session has not been initialized - call init() first.");
 		}
-		return sessionFactory.newSession(this);
+		return sessionFactory.newSession(this, attachmentMode);
 	}
 
 	public synchronized void init() {
@@ -95,12 +100,12 @@ public class VirpConfig {
 		this.noColumnsEqualsNullRow = noColumnsEqualsNullRow;
 	}
 
-	public boolean isSessionAttachmentOn() {
-		return sessionAttachmentOn;
+	public SessionAttachmentMode getDefaultSessionAttachmentMode() {
+		return defaultSessionAttachmentMode;
 	}
 
-	public void setSessionAttachmentOn(boolean sessionAttachmentOn) {
-		this.sessionAttachmentOn = sessionAttachmentOn;
+	public void setDefaultSessionAttachmentMode(SessionAttachmentMode defaultSessionAttachmentMode) {
+		this.defaultSessionAttachmentMode = defaultSessionAttachmentMode;
 	}
 
 	protected Map<Class<?>, RowMapperMetaData> getConfiguredClasses() {

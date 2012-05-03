@@ -8,16 +8,14 @@ import com.jshnd.virp.annotation.NamedColumn;
 import com.jshnd.virp.annotation.RowMapper;
 import com.jshnd.virp.config.ConfiguredRowMapperSource;
 import com.jshnd.virp.config.RowMapperMetaData;
+import com.jshnd.virp.config.SessionAttachmentMode;
 import com.jshnd.virp.exception.VirpOperationException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static org.easymock.EasyMock.*;
 import static org.junit.Assert.*;
@@ -37,8 +35,10 @@ public class VirpSessionTest {
 
 		private List<Object> getManyReturns;
 
-		TestSession(VirpConfig config) {
-			super(config);
+		private Map<Object, Set<ColumnAccessor<?, ?>>> modifications = new HashMap<Object, Set<ColumnAccessor<?, ?>>>();
+
+		TestSession(VirpConfig config, SessionAttachmentMode mode) {
+			super(config, mode);
 		}
 
 		@Override
@@ -58,12 +58,19 @@ public class VirpSessionTest {
 		}
 
 		@Override
-		protected VirpActionResult doClose() {
+		protected VirpActionResult doFlush() {
 			closed = true;
 			return createMock(VirpActionResult.class);
 		}
 
-
+		@Override
+		protected <T> void doChange(RowMapperMetaData<T> type, T toChange,
+									ColumnAccessor<?, ?> columnAccessor) {
+			if(!modifications.containsKey(toChange)) {
+				modifications.put(toChange, new HashSet<ColumnAccessor<?, ?>>());
+			}
+			modifications.get(toChange).add(columnAccessor);
+		}
 	}
 
 	private TestSession testObj;
@@ -81,9 +88,7 @@ public class VirpSessionTest {
 
 	private void basicSetup() {
 		config = createMock(VirpConfig.class);
-		expect(config.isSessionAttachmentOn()).andReturn(false).once();
-		testObj = new TestSession(config);
-		reset(config);
+		testObj = new TestSession(config, SessionAttachmentMode.NONE);
 	}
 
 	@Test
@@ -147,7 +152,6 @@ public class VirpSessionTest {
 		basicSetup();
 		RowMapperMetaData<Object> meta = createNiceMock(RowMapperMetaData.class);
 		expect(config.getMetaData(Object.class)).andReturn(meta).once();
-		expect(config.isSessionAttachmentOn()).andReturn(false).once();
 		replay(config);
 
 		testObj.getReturns = new Object();
@@ -181,7 +185,6 @@ public class VirpSessionTest {
 		basicSetup();
 		RowMapperMetaData<Object> meta = createMock(RowMapperMetaData.class);
 		expect(config.getMetaData(Object.class)).andReturn(meta).once();
-		expect(config.isSessionAttachmentOn()).andReturn(false).once();
 		replay(config, meta);
 
 		Object foo = new Object();
@@ -302,14 +305,13 @@ public class VirpSessionTest {
 		VirpSessionFactory factory = createMock(VirpSessionFactory.class);
 		VirpConfig config = new VirpConfig();
 		config.setSessionFactory(factory);
-		config.setSessionAttachmentOn(true);
 		ConfiguredRowMapperSource source = new ConfiguredRowMapperSource();
 		source.setRowMapperClasses(Sets.<Class<?>>newHashSet(ProxiedGetTester.class));
 		config.setMetaDataReader(new AnnotationDrivenRowMapperMetaDataReader());
 		config.setRowMapperSource(source);
 		config.init();
 
-		testObj = new TestSession(config);
+		testObj = new TestSession(config, SessionAttachmentMode.MANUAL_FLUSH);
 	}
 
 	@Test
@@ -357,7 +359,7 @@ public class VirpSessionTest {
 		fromSession.setValueOne(base.getKey() + "Modification");
 		fromSession.setNotMapped("shouldntmatter");
 
-		Map<Object, Set<ColumnAccessor<?, ?>>> modifications = testObj.getObjectModifications();
+		Map<Object, Set<ColumnAccessor<?, ?>>> modifications = testObj.modifications;
 		assertTrue(modifications.containsKey(base));
 		Set<ColumnAccessor<?,?>> modified = modifications.get(base);
 		assertNotNull(modified);

@@ -1,6 +1,7 @@
 package com.jshnd.virp;
 
 import com.jshnd.virp.config.RowMapperMetaData;
+import com.jshnd.virp.config.SessionAttachmentMode;
 import com.jshnd.virp.exception.VirpOperationException;
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
@@ -13,9 +14,9 @@ public abstract class VirpSession {
 
 	protected VirpConfig config;
 
-	private boolean open = true;
+	private SessionAttachmentMode attachmentMode;
 
-	private Map<Object, Set<ColumnAccessor<?, ?>>> objectModifications;
+	private boolean open = true;
 
 	private class SessionProxy<T> implements MethodInterceptor {
 
@@ -36,6 +37,7 @@ public abstract class VirpSession {
 
 		@Override
 		public Object intercept(Object proxy, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
+			Object ret = method.invoke(wrapped, args);
 			if(args.length == 1) {
 				if(method.equals(keySetter)) {
 					throw new VirpOperationException("Attempt to modify key for "
@@ -44,23 +46,19 @@ public abstract class VirpSession {
 				}
 				ColumnAccessor<?, ?> accessor = columnAccessors.get(method);
 				if(accessor != null) {
-					if(!objectModifications.containsKey(wrapped)) {
-						objectModifications.put(wrapped, new HashSet<ColumnAccessor<?, ?>>());
-					}
-					objectModifications.get(wrapped).add(accessor);
+					doChange(meta, wrapped, accessor);
 				}
 			}
-			return method.invoke(wrapped, args);
+			return ret;
 		}
 	}
 
-	public VirpSession(VirpConfig config) {
+	public VirpSession(VirpConfig config, SessionAttachmentMode attachmentMode) {
 		this.config = config;
-		if(config.isSessionAttachmentOn()) {
-			objectModifications = new HashMap<Object, Set<ColumnAccessor<?, ?>>>();
-		}
+		this.attachmentMode = attachmentMode;
 	}
 
+	@SuppressWarnings("unchecked")
 	public <T> void save(T row) {
 		sanityCheck();
 		doSave(getMeta((Class<T>) row.getClass()), row);
@@ -70,7 +68,7 @@ public abstract class VirpSession {
 		sanityCheck();
 		RowMapperMetaData<T> meta = getMeta(rowClass);
 		T ret = doGet(meta, key);
-		if(config.isSessionAttachmentOn()) {
+		if(attachmentMode.isAttach()) {
 			ret = proxyForSession(ret, meta);
 		}
 		return ret;
@@ -81,7 +79,7 @@ public abstract class VirpSession {
 		RowMapperMetaData<T> meta = getMeta(rowClass);
 		List<T> objects = getWithMeta(meta, keys);
 		List<T> ret;
-		if(config.isSessionAttachmentOn()) {
+		if(attachmentMode.isAttach()) {
 			ret = new ArrayList<T>();
 			for(T t : objects) {
 				ret.add(proxyForSession(t, meta));
@@ -111,7 +109,11 @@ public abstract class VirpSession {
 	public VirpActionResult close() {
 		sanityCheck();
 		open = false;
-		return doClose();
+		return flush();
+	}
+
+	public VirpActionResult flush() {
+		return doFlush();
 	}
 
 	private <T> RowMapperMetaData<T> getMeta(Class<T> type) {
@@ -130,20 +132,21 @@ public abstract class VirpSession {
 
 	@SuppressWarnings("unchecked")
 	private <T> T proxyForSession(T object, RowMapperMetaData<T> meta) {
-		Class clazz = object.getClass();
 		return (T) Enhancer.create(object.getClass(), new SessionProxy(object, meta));
 	}
 
-	protected Map<Object, Set<ColumnAccessor<?, ?>>> getObjectModifications() {
-		return objectModifications;
+	public SessionAttachmentMode getAttachmentMode() {
+		return attachmentMode;
 	}
 
 	protected abstract <T> void doSave(RowMapperMetaData<T> type, T row);
+
+	protected abstract <T> void doChange(RowMapperMetaData<T> type, T row, ColumnAccessor<?, ?> changeAccessor);
 
 	protected abstract <T, K> T doGet(RowMapperMetaData<T> type, K key);
 
 	protected abstract <T, K> List<T> doGet(RowMapperMetaData<T> type, K... keys);
 
-	protected abstract VirpActionResult doClose();
+	protected abstract VirpActionResult doFlush();
 
 }
