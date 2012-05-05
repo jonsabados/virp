@@ -23,6 +23,11 @@ class MethodAnnotationUtil implements AnnotationUtil {
 	}
 
 	@Override
+	public Annotation[] getAnnotations() {
+		return method.getAnnotations();
+	}
+
+	@Override
 	public Method getGetMethod() {
 		return method;
 	}

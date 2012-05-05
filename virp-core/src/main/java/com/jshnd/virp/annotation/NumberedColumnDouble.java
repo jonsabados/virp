@@ -6,9 +6,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.ANNOTATION_TYPE})
-public @interface NumberedColumn {
+@Target({ElementType.FIELD, ElementType.METHOD})
+@NumberedColumn(type = Double.class)
+public @interface NumberedColumnDouble {
 
-	Class<? extends Number> type();
+	double number();
 
 }

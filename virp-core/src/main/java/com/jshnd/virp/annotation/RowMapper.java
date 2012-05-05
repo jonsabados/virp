@@ -9,6 +9,8 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RowMapper {
 
-	public String columnFamily();
+	String columnFamily();
+
+	TimeToLive defaultTimeToLive() default @TimeToLive(seconds = TimeToLive.NONE);
 
 }

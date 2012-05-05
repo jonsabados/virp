@@ -7,6 +7,8 @@ interface AnnotationUtil {
 
 	public <T extends Annotation> T getAnnotation(Class<T> annotation);
 
+	public Annotation[] getAnnotations();
+
 	public Method getGetMethod();
 
 	public Method getSetMethod();

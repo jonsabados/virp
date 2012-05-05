@@ -2,6 +2,7 @@ package com.jshnd.virp.annotation;
 
 import com.google.common.collect.Iterables;
 import com.jshnd.virp.ColumnAccessor;
+import com.jshnd.virp.StaticValueAccessor;
 import com.jshnd.virp.config.RowMapperMetaData;
 import com.jshnd.virp.exception.VirpAnnotationException;
 import com.jshnd.virp.exception.VirpException;
@@ -96,8 +97,22 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 	public static class NumberedColumnPropertyTester {
 
 		@KeyColumn
-		@NumberedColumn(number = 10)
 		private String key;
+
+		@NumberedColumnShort(number = 0)
+		private String shortValue;
+
+		@NumberedColumnInt(number = 1)
+		private String intValue;
+
+		@NumberedColumnLong(number = 2)
+		private String longValue;
+
+		@NumberedColumnFloat(number = 3.0f)
+		private String floatValue;
+
+		@NumberedColumnDouble(number = 4.0d)
+		private String doubleValue;
 
 		public String getKey() {
 			return key;
@@ -106,6 +121,46 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 		public void setKey(String key) {
 			this.key = key;
 		}
+
+		public String getShortValue() {
+			return shortValue;
+		}
+
+		public void setShortValue(String shortValue) {
+			this.shortValue = shortValue;
+		}
+
+		public String getIntValue() {
+			return intValue;
+		}
+
+		public void setIntValue(String intValue) {
+			this.intValue = intValue;
+		}
+
+		public String getLongValue() {
+			return longValue;
+		}
+
+		public void setLongValue(String longValue) {
+			this.longValue = longValue;
+		}
+
+		public String getFloatValue() {
+			return floatValue;
+		}
+
+		public void setFloatValue(String floatValue) {
+			this.floatValue = floatValue;
+		}
+
+		public String getDoubleValue() {
+			return doubleValue;
+		}
+
+		public void setDoubleValue(String doubleValue) {
+			this.doubleValue = doubleValue;
+		}
 	}
 
 	@Test
@@ -113,11 +168,19 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 		RowMapperMetaData<NumberedColumnPropertyTester> meta = testObj.readClass(NumberedColumnPropertyTester.class);
 		NumberedColumnPropertyTester bean = new NumberedColumnPropertyTester();
 		bean.key = "fooBar";
-		assertEquals(1, meta.getColumnAccessors().size());
-		ColumnAccessor getter = Iterables.getFirst(meta.getColumnAccessors(), null);
-		assertEquals(Long.valueOf(10), getter.getColumnIdentifier().getValue());
-		assertEquals(Long.class, getter.getColumnIdentifier().getValueType());
-		assertEquals("fooBar", getter.getValueManipulator().getValue(bean));
+		assertEquals(5, meta.getColumnAccessors().size());
+		Class<?>[] expected = new Class<?>[] {Short.class, Integer.class, Long.class, Float.class, Double.class};
+		int hitCount = 0;
+		for(ColumnAccessor<?, ?> accessor : meta.getColumnAccessors()) {
+			StaticValueAccessor identifier = accessor.getColumnIdentifier();
+			Class<?> type = identifier.getValueType();
+			for(int i = 0; i < expected.length; i++) {
+				if(type.equals(expected[i])) {
+					hitCount++;
+					assertEquals(i, ((Number)identifier.getValue()).intValue());
+				}
+			}
+		}
 	}
 
 	@RowMapper(columnFamily = "dontCare")
@@ -126,7 +189,7 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 		private String key;
 
 		@KeyColumn
-		@NumberedColumn(number = 10)
+		@NumberedColumnLong(number = 10)
 		public String getKey() {
 			return key;
 		}

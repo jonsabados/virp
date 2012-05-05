@@ -92,7 +92,7 @@ public class VirpHectorITCase {
 		@NamedColumn(name = "columnTwo")
 		private String columnTwo;
 
-		@NumberedColumn(number = 10)
+		@NumberedColumnLong(number = 10)
 		private long columnTen;
 
 		public String getKey() {

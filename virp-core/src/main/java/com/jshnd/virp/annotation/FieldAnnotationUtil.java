@@ -25,6 +25,11 @@ class FieldAnnotationUtil implements AnnotationUtil {
 	}
 
 	@Override
+	public Annotation[] getAnnotations() {
+		return field.getAnnotations();
+	}
+
+	@Override
 	public Method getGetMethod() {
 		String methodName = "get" + StringUtils.capitalize(field.getName());
 		try {

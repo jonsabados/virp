@@ -11,7 +11,9 @@ import com.jshnd.virp.reflection.ReflectionMethodValueAccessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Set;
@@ -50,26 +52,53 @@ public class AnnotationDrivenRowMapperMetaDataReader implements RowMapperMetaDat
 
 	private void processGetter(AnnotationUtil annotationUtil, RowMapperMetaData meta,
 							   Set<ColumnAccessor<?, ?>> valueAccessors) {
-		NamedColumn namedColumn = annotationUtil.getAnnotation(NamedColumn.class);
-		NumberedColumn numberedColumn = annotationUtil.getAnnotation(NumberedColumn.class);
 		KeyColumn keyColumn = annotationUtil.getAnnotation(KeyColumn.class);
-		if (namedColumn != null || numberedColumn != null || keyColumn != null) {
+		NamedColumn namedColumn = annotationUtil.getAnnotation(NamedColumn.class);
+		Set<Annotation> numberedColumns = getNumberColumns(annotationUtil);
+		if (keyColumn != null || namedColumn != null || numberedColumns.size() > 0) {
 			Method getter = annotationUtil.getGetMethod();
 			Method setter = annotationUtil.getSetMethod();
 			ReflectionMethodValueAccessor<Object> accessor =
 					new ReflectionMethodValueAccessor<Object>(getter, setter);
-			if (namedColumn != null) {
-				valueAccessors.add(new BasicColumnAccessor<String, Object>(
-						new StaticValueAccessor<String>(namedColumn.name(), String.class), accessor));
-			}
-			if (numberedColumn != null) {
-				valueAccessors.add(new BasicColumnAccessor<Long, Object>(
-						new StaticValueAccessor<Long>(Long.valueOf(numberedColumn.number()), Long.class), accessor));
-			}
 			if (keyColumn != null) {
 				enforceSingleKeyColumn(meta);
 				meta.setKeyValueManipulator(accessor);
 			}
+			if (namedColumn != null) {
+				valueAccessors.add(new BasicColumnAccessor<String, Object>(
+						new StaticValueAccessor<String>(namedColumn.name(), String.class), accessor));
+			}
+			for(Annotation numberedColumn : numberedColumns) {
+				addNumberedColumn(numberedColumn, valueAccessors, accessor);
+			}
+		}
+	}
+
+	private Set<Annotation> getNumberColumns(AnnotationUtil annotationUtil) {
+		Set<Annotation> ret = new HashSet<Annotation>();
+		for(Annotation annotation : annotationUtil.getAnnotations()) {
+			if(annotation.annotationType().getAnnotation(NumberedColumn.class) != null) {
+				ret.add(annotation);
+			}
+		}
+		return ret;
+	}
+
+	@SuppressWarnings("unchecked")
+	private void addNumberedColumn(Annotation annotation, Set<ColumnAccessor<?, ?>> valueAccessors,
+								   ReflectionMethodValueAccessor<Object> accessor) {
+		try {
+			NumberedColumn type = annotation.annotationType().getAnnotation(NumberedColumn.class);
+			Method numberMethod = annotation.annotationType().getMethod("number");
+			StaticValueAccessor<? extends Number> identifierAccessor =
+					new StaticValueAccessor(numberMethod.invoke(annotation), type.type());
+			valueAccessors.add(new BasicColumnAccessor(identifierAccessor, accessor));
+		} catch (NoSuchMethodException e) {
+			throw new VirpAnnotationException("@NumberedColumns must have a number method!");
+		} catch (InvocationTargetException e) {
+			throw new VirpAnnotationException(e);
+		} catch (IllegalAccessException e) {
+			throw new VirpAnnotationException(e);
 		}
 	}
 
