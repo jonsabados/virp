@@ -64,7 +64,7 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 		testObj.readClass(BadKeyTester.class);
 	}
 
-	@RowMapper(columnFamily = "dontCare", defaultTimeToLive = @TimeToLive( seconds = 10))
+	@RowMapper(columnFamily = "dontCare", defaultTimeToLive = @TimeToLive(seconds = 10))
 	public static class TtlTester {
 
 		@KeyColumn

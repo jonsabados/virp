@@ -1,6 +1,7 @@
 package com.jshnd.virp.hector;
 
 import com.jshnd.virp.*;
+import com.jshnd.virp.annotation.TimeToLive;
 import com.jshnd.virp.config.RowMapperMetaData;
 import com.jshnd.virp.config.SessionAttachmentMode;
 import com.jshnd.virp.exception.VirpException;
@@ -63,6 +64,10 @@ public class HectorSession extends VirpSession {
 			ValueAccessor<?> value = accessor.getValueManipulator();
 			HColumn hcolumn = HFactory.createColumn(identifier.getValue(), value.getValue(row),
 					(Serializer) identifier.getSessionFactoryData(), (Serializer) value.getSessionFactoryData());
+			int ttl = accessor.getTimeToLive().getValue(row);
+			if(ttl != TimeToLive.NONE) {
+				hcolumn.setTtl(ttl);
+			}
 			mutator.addInsertion(key, columnFamily, hcolumn);
 		}
 	}

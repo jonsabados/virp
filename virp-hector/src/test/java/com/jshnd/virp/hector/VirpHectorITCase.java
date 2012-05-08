@@ -87,6 +87,7 @@ public class VirpHectorITCase {
 		private String key;
 
 		@NamedColumn(name = "columnOne")
+		@TimeToLive(seconds = 20)
 		private String columnOne;
 
 		@NamedColumn(name = "columnTwo")
@@ -147,9 +148,12 @@ public class VirpHectorITCase {
 		query.setKey("save");
 		query.setColumnNames("columnOne", "columnTwo");
 		QueryResult<ColumnSlice<String, String>> result = query.execute();
-		assertEquals("valueForColumnOne", result.get().getColumnByName("columnOne").getValue());
-		assertEquals("valueForColumnTwo", result.get().getColumnByName("columnTwo").getValue());
-
+		HColumn one = result.get().getColumnByName("columnOne");
+		assertEquals("valueForColumnOne", one.getValue());
+		assertEquals(Integer.valueOf(20), Integer.valueOf(one.getTtl()));
+		HColumn two = result.get().getColumnByName("columnTwo");
+		assertEquals("valueForColumnTwo", two.getValue());
+		assertEquals(Integer.valueOf(0), Integer.valueOf(two.getTtl()));
 		Serializer<Long> longSerializer = LongSerializer.get();
 		ColumnQuery<String, Long, Long> query2 =
 				HFactory.createColumnQuery(testKeyspace, stringSerializer, longSerializer, longSerializer);
