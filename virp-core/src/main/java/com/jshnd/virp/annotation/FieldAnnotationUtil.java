@@ -47,4 +47,9 @@ class FieldAnnotationUtil implements AnnotationUtil {
 			throw new VirpAnnotationException("Setter for field " + field.getName() + " not found");
 		}
 	}
+
+	@Override
+	public Class<?> getType() {
+		return field.getType();
+	}
 }

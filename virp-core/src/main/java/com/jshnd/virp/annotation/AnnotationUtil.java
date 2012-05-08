@@ -12,4 +12,7 @@ interface AnnotationUtil {
 	public Method getGetMethod();
 
 	public Method getSetMethod();
+
+	public Class<?> getType();
+
 }

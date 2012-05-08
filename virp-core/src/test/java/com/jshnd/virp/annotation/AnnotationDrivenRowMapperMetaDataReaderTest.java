@@ -16,6 +16,7 @@ import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 @SuppressWarnings("unused")
 public class AnnotationDrivenRowMapperMetaDataReaderTest {
@@ -61,6 +62,87 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 		expectedException.expect(VirpException.class);
 		expectedException.expectMessage("Classes may only have a single key column");
 		testObj.readClass(BadKeyTester.class);
+	}
+
+	@RowMapper(columnFamily = "dontCare", defaultTimeToLive = @TimeToLive( seconds = 10))
+	public static class TtlTester {
+
+		@KeyColumn
+		@NamedColumn(name = "foo")
+		@TimeToLive(seconds = 20)
+		private String key;
+
+		@NamedColumn(name = "bar")
+		@HasDynamicTimeToLive(identifier = "bar")
+		private String otherColumn;
+
+		@NamedColumn(name = "bob")
+		private String defaultedColumn;
+
+		@DynamicTimeToLive(forIdentifier = "bar")
+		private int barsTtl;
+
+		public String getKey() {
+			return key;
+		}
+
+		public void setKey(String key) {
+			this.key = key;
+		}
+
+		public String getOtherColumn() {
+			return otherColumn;
+		}
+
+		public void setOtherColumn(String otherColumn) {
+			this.otherColumn = otherColumn;
+		}
+
+		public int getBarsTtl() {
+			return barsTtl;
+		}
+
+		public void setBarsTtl(int barsTtl) {
+			this.barsTtl = barsTtl;
+		}
+
+		public String getDefaultedColumn() {
+			return defaultedColumn;
+		}
+
+		public void setDefaultedColumn(String defaultedColumn) {
+			this.defaultedColumn = defaultedColumn;
+		}
+	}
+
+	@Test
+	public void testTtls() {
+		RowMapperMetaData<TtlTester> meta = testObj.readClass(TtlTester.class);
+		TtlTester tester = new TtlTester();
+		tester.setKey("key");
+		tester.setOtherColumn("bar");
+		tester.setDefaultedColumn("default");
+		tester.setBarsTtl(25);
+		boolean keyHit = false;
+		boolean barHit = false;
+		boolean defaultHit = false;
+		assertEquals(3, meta.getColumnAccessors().size());
+		for(ColumnAccessor<?, ?> accessor : meta.getColumnAccessors()) {
+			Object value = accessor.getValueManipulator().getValue(tester);
+			if("key".equals(value)) {
+				assertEquals(Integer.valueOf(20), accessor.getTimeToLive().getValue(tester));
+				keyHit = true;
+			} else if("bar".equals(value)) {
+				assertEquals(Integer.valueOf(25), accessor.getTimeToLive().getValue(tester));
+				barHit = true;
+			} else if("default".equals(value)) {
+				assertEquals(Integer.valueOf(10), accessor.getTimeToLive().getValue(tester));
+				defaultHit = true;
+			}
+		}
+		assertTrue(keyHit);
+		assertTrue(barHit);
+		assertTrue(defaultHit);
 	}
 
 	@RowMapper(columnFamily = "dontCare")

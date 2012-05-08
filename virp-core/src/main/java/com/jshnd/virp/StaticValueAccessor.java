@@ -1,10 +1,12 @@
 package com.jshnd.virp;
 
-public class StaticValueAccessor<T> extends BaseValueAccessor<T> implements ValueTypeHolder<T> {
+public class StaticValueAccessor<T> implements ValueTypeHolder<T>, SessionFactoryDataHolder<T> {
 
 	private T value;
 
 	private Class<T> type;
+
+	private Object sessionFactoryData;
 
 	public StaticValueAccessor(T value, Class<T> type) {
 		this.value = value;
@@ -19,4 +21,13 @@ public class StaticValueAccessor<T> extends BaseValueAccessor<T> implements Valu
 		return type;
 	}
 
+	@Override
+	public Object getSessionFactoryData() {
+		return sessionFactoryData;
+	}
+
+	@Override
+	public void setSessionFactoryData(Object sessionFactoryData) {
+		this.sessionFactoryData = sessionFactoryData;
+	}
 }

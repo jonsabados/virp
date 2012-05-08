@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.METHOD})
-@NumberedColumn(type = Long.class)
+@NumberedColumnMarker(type = Long.class)
 public @interface NumberedColumnLong {
 
 	long number();

@@ -7,9 +7,8 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.METHOD})
-@NumberedColumnMarker(type = Integer.class)
-public @interface NumberedColumnInt {
+public @interface HasDynamicTimeToLive {
 
-	int number();
+	public String identifier();
 
 }

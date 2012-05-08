@@ -5,13 +5,13 @@ import com.jshnd.virp.exception.VirpException;
 
 import java.lang.reflect.Method;
 
-public class ReflectionMethodValueAccessor<T> extends BaseValueManipulator<T> {
+public class ReflectionMethodValueManipulator<T> extends BaseValueManipulator<T> {
 
 	private Method getterMethod;
 
 	private Method setterMethod;
 
-	public ReflectionMethodValueAccessor(Method getterMethod, Method setterMethod) {
+	public ReflectionMethodValueManipulator(Method getterMethod, Method setterMethod) {
 		this.getterMethod = getterMethod;
 		this.setterMethod = setterMethod;
 	}

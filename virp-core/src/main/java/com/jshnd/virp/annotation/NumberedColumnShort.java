@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.METHOD})
-@NumberedColumn(type = Short.class)
+@NumberedColumnMarker(type = Short.class)
 public @interface NumberedColumnShort {
 
 	short number();

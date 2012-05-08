@@ -41,4 +41,9 @@ class MethodAnnotationUtil implements AnnotationUtil {
 					+ classFor.getCanonicalName());
 		}
 	}
+
+	@Override
+	public Class<?> getType() {
+		return method.getReturnType();
+	}
 }

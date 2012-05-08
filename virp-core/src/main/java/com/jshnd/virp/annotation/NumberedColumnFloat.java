@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.METHOD})
-@NumberedColumn(type = Float.class)
+@NumberedColumnMarker(type = Float.class)
 public @interface NumberedColumnFloat {
 
 	float number();

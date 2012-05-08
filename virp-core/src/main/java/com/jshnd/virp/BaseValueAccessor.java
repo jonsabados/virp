@@ -1,6 +1,6 @@
 package com.jshnd.virp;
 
-public abstract class BaseValueAccessor<T> implements  SessionFactoryDataHolder<T> {
+public abstract class BaseValueAccessor<T> implements SessionFactoryDataHolder<T>, ValueAccessor<T> {
 
 	private Object sessionFactoryData;
 

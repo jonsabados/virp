@@ -2,6 +2,7 @@ package com.jshnd.virp.hector;
 
 import com.google.common.collect.Sets;
 import com.jshnd.virp.*;
+import com.jshnd.virp.annotation.TimeToLive;
 import com.jshnd.virp.config.RowMapperMetaData;
 import me.prettyprint.cassandra.serializers.LongSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
@@ -58,7 +59,7 @@ public class HectorSessionFactoryTest {
 		TestValueAccessor<String> accessor3 = new TestValueAccessor<String>(String.class);
 		type.setKeyValueManipulator(accessor1);
 		BasicColumnAccessor<String, String> columnAccessor =
-				new BasicColumnAccessor<String, String>(accessor2, accessor3);
+				new BasicColumnAccessor<String, String>(accessor2, accessor3, new HardCodedValueAccessor<Integer>(TimeToLive.NONE));
 		type.setColumnAccessors(Sets.<ColumnAccessor<?,?>>newHashSet(columnAccessor));
 		testObj.setupClass(type);
 		assertSame(StringSerializer.get(), accessor1.getSessionFactoryData());
@@ -74,7 +75,7 @@ public class HectorSessionFactoryTest {
 		TestValueAccessor<Long> accessor3 = new TestValueAccessor<Long>(Long.class);
 		type.setKeyValueManipulator(accessor1);
 		BasicColumnAccessor<Long, Long> columnAccessor =
-				new BasicColumnAccessor<Long, Long>(accessor2, accessor3);
+				new BasicColumnAccessor<Long, Long>(accessor2, accessor3, new HardCodedValueAccessor<Integer>(TimeToLive.NONE));
 		type.setColumnAccessors(Sets.<ColumnAccessor<?,?>>newHashSet(columnAccessor));
 		testObj.setupClass(type);
 		assertSame(LongSerializer.get(), accessor1.getSessionFactoryData());
@@ -90,7 +91,7 @@ public class HectorSessionFactoryTest {
 		TestValueAccessor<Long> accessor3 = new TestValueAccessor<Long>(long.class);
 		type.setKeyValueManipulator(accessor1);
 		BasicColumnAccessor<Long, Long> columnAccessor =
-				new BasicColumnAccessor<Long, Long>(accessor2, accessor3);
+				new BasicColumnAccessor<Long, Long>(accessor2, accessor3, new HardCodedValueAccessor<Integer>(TimeToLive.NONE));
 		type.setColumnAccessors(Sets.<ColumnAccessor<?,?>>newHashSet(columnAccessor));
 		testObj.setupClass(type);
 		assertSame(LongSerializer.get(), accessor1.getSessionFactoryData());
