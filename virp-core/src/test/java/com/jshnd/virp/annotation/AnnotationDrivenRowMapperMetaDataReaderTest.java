@@ -64,6 +64,109 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 		testObj.readClass(BadKeyTester.class);
 	}
 
+	@RowMapper(columnFamily = "dontCare")
+	public static class MissingDynamicTtlTester {
+
+		@KeyColumn
+		@HasDynamicTimeToLive(identifier = "bar")
+		private String pipe;
+
+		@DynamicTimeToLive(forIdentifier = "notbar")
+		private int notAWrench;
+
+		public String getPipe() {
+			return pipe;
+		}
+
+		public void setPipe(String pipe) {
+			this.pipe = pipe;
+		}
+
+		public int getNotAWrench() {
+			return notAWrench;
+		}
+
+		public void setNotAWrench(int notAWrench) {
+			this.notAWrench = notAWrench;
+		}
+	}
+
+	@Test
+	public void testMissingDynamicTtlColumn() {
+		expectedException.expect(VirpAnnotationException.class);
+		expectedException.expectMessage("Dynamic ttl for marked property: bar not found");
+		testObj.readClass(MissingDynamicTtlTester.class);
+	}
+
+	@RowMapper(columnFamily = "dontCare")
+	public static class StaticAndDynamicTtlTester {
+
+		@KeyColumn
+		@HasDynamicTimeToLive(identifier = "bar")
+		@TimeToLive(seconds = 30)
+		private String pipe;
+
+		@DynamicTimeToLive(forIdentifier = "bar")
+		private int wrench;
+
+		public String getPipe() {
+			return pipe;
+		}
+
+		public void setPipe(String pipe) {
+			this.pipe = pipe;
+		}
+
+		public int getWrench() {
+			return wrench;
+		}
+
+		public void setWrench(int wrench) {
+			this.wrench = wrench;
+		}
+	}
+
+	@Test
+	public void testStaticAndDynamicTtl() {
+		expectedException.expect(VirpAnnotationException.class);
+		expectedException.expectMessage("Fields may only have static or dynamic ttl's - not both");
+		testObj.readClass(StaticAndDynamicTtlTester.class);
+	}
+
+	@RowMapper(columnFamily = "dontCare")
+	public static class NonIntDynamicTtlTester {
+
+		@KeyColumn
+		@HasDynamicTimeToLive(identifier = "bar")
+		private String pipe;
+
+		@DynamicTimeToLive(forIdentifier = "bar")
+		private String wrench;
+
+		public String getPipe() {
+			return pipe;
+		}
+
+		public void setPipe(String pipe) {
+			this.pipe = pipe;
+		}
+
+		public String getWrench() {
+			return wrench;
+		}
+
+		public void setWrench(String wrench) {
+			this.wrench = wrench;
+		}
+	}
+
+	@Test
+	public void testNonIntDynamicTtl() {
+		expectedException.expect(VirpAnnotationException.class);
+		expectedException.expectMessage("DynamicTimeToLive members must be of Integer type");
+		testObj.readClass(NonIntDynamicTtlTester.class);
+	}
+
 	@RowMapper(columnFamily = "dontCare", defaultTimeToLive = @TimeToLive(seconds = 10))
 	public static class TtlTester {
 
