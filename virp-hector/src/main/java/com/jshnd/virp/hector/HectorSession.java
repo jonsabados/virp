@@ -5,14 +5,14 @@ import com.jshnd.virp.annotation.TimeToLive;
 import com.jshnd.virp.config.RowMapperMetaData;
 import com.jshnd.virp.config.SessionAttachmentMode;
 import com.jshnd.virp.exception.VirpException;
+import com.jshnd.virp.query.Query;
+import com.jshnd.virp.query.QueryParameter;
+import me.prettyprint.cassandra.model.IndexedSlicesQuery;
 import me.prettyprint.cassandra.serializers.BytesArraySerializer;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.ResultStatus;
 import me.prettyprint.hector.api.Serializer;
-import me.prettyprint.hector.api.beans.ColumnSlice;
-import me.prettyprint.hector.api.beans.HColumn;
-import me.prettyprint.hector.api.beans.Row;
-import me.prettyprint.hector.api.beans.Rows;
+import me.prettyprint.hector.api.beans.*;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.MutationResult;
 import me.prettyprint.hector.api.mutation.Mutator;
@@ -64,7 +64,7 @@ public class HectorSession extends VirpSession {
 			ValueAccessor<?> value = accessor.getValueManipulator();
 			HColumn hcolumn = HFactory.createColumn(identifier.getValue(), value.getValue(row),
 					(Serializer) identifier.getSessionFactoryData(), (Serializer) value.getSessionFactoryData());
-			int ttl = accessor.getTimeToLive().getValue(row);
+			int ttl = accessor.getTimeToLive().getValue(row).intValue();
 			if(ttl != TimeToLive.NONE) {
 				hcolumn.setTtl(ttl);
 			}
@@ -120,6 +120,62 @@ public class HectorSession extends VirpSession {
 
 		logQuery(type, result, keys);
 
+		return rowsToList(type, ret, typeBits, result);
+	}
+
+	@Override
+	protected <T> List<T> doFind(Query<T> virpQuery, RowMapperMetaData<T> type) {
+		List<T> ret = new ArrayList<T>();
+		BytesArraySerializer serializer = BytesArraySerializer.get();
+		IndexedSlicesQuery<byte[], byte[], byte[]> query =
+				HFactory.createIndexedSlicesQuery(keyspace, serializer, serializer, serializer);
+
+		TypeBits<T, Object> typeBits = new TypeBits<T, Object>(type);
+
+		for(QueryParameter param : virpQuery.getParameters()) {
+			addParameter(query, param);
+		}
+		query.setColumnFamily(type.getColumnFamily());
+		query.setColumnNames(typeBits.columns);
+
+		try {
+			QueryResult<OrderedRows<byte[], byte[], byte[]>> result = query.execute();
+			logQuery(type, result);
+
+			return rowsToList(type, ret, typeBits, result);
+		} catch(Exception e) {
+			throw new VirpHectorException(e);
+		}
+	}
+
+	private void addParameter(IndexedSlicesQuery<byte[], byte[], byte[]> query, QueryParameter param) {
+		Serializer nameSerializer = (Serializer) param.getColumnIdentifier().getSessionFactoryData();
+		Serializer valueSerializer = (Serializer) param.getSessionFactoryData().getSessionFactoryData();
+		byte[] column = nameSerializer.toBytes(param.getColumnIdentifier().getValue());
+		byte[] value = valueSerializer.toBytes(param.getArgument());
+		switch (param.getCriteria()) {
+			case EQUAL:
+				query.addEqualsExpression(column, value);
+				break;
+			case GREATER:
+				query.addGtExpression(column, value);
+				break;
+			case GREATER_OR_EQUAL:
+				query.addGteExpression(column, value);
+				break;
+			case LESSER:
+				query.addLtExpression(column, value);
+				break;
+			case LESSER_OR_EQUAL:
+				query.addLteExpression(column, value);
+				break;
+			default:
+				throw new VirpHectorException("Someone added a new criteria type... please fix me");
+		}
+	}
+
+	private <T, K> List<T> rowsToList(RowMapperMetaData<T> type, List<T> ret, TypeBits<T, K> typeBits,
+								   QueryResult<? extends Rows<byte[], byte[], byte[]>> result) {
 		for (Row<byte[], byte[], byte[]> row : result.get()) {
 			T object = fromSlice(type, typeBits, row.getColumnSlice());
 			if (object != null) {

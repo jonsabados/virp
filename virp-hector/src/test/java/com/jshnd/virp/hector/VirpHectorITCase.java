@@ -6,6 +6,8 @@ import com.jshnd.virp.VirpSession;
 import com.jshnd.virp.annotation.*;
 import com.jshnd.virp.config.ConfiguredRowMapperSource;
 import com.jshnd.virp.config.SessionAttachmentMode;
+import com.jshnd.virp.query.Query;
+import me.prettyprint.cassandra.model.BasicColumnDefinition;
 import me.prettyprint.cassandra.model.BasicColumnFamilyDefinition;
 import me.prettyprint.cassandra.model.BasicKeyspaceDefinition;
 import me.prettyprint.cassandra.serializers.LongSerializer;
@@ -16,17 +18,17 @@ import me.prettyprint.hector.api.Serializer;
 import me.prettyprint.hector.api.beans.ColumnSlice;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.ddl.ColumnFamilyDefinition;
+import me.prettyprint.hector.api.ddl.ColumnIndexType;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.Mutator;
 import me.prettyprint.hector.api.query.ColumnQuery;
 import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.SliceQuery;
 import me.prettyprint.hector.testutils.EmbeddedServerHelper;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
+import org.junit.rules.ExpectedException;
 
+import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
 
@@ -41,6 +43,9 @@ public class VirpHectorITCase {
 	private static Cluster cluster;
 
 	private VirpConfig config;
+
+	@Rule
+	public ExpectedException expectedException = ExpectedException.none();
 
 	@BeforeClass
 	public static void startupEmbeddedCluster() throws Exception {
@@ -57,6 +62,16 @@ public class VirpHectorITCase {
 		columnFamilyDefinition.setName("BasicTestObject");
 		columnFamilyDefinition.setKeyspaceName(testKeyspace.getKeyspaceName());
 		cluster.addColumnFamily(columnFamilyDefinition);
+		ColumnFamilyDefinition indexed = new BasicColumnFamilyDefinition();
+		indexed.setName("HasSecondaryIndex");
+		indexed.setKeyspaceName(testKeyspace.getKeyspaceName());
+		BasicColumnDefinition indexedColumn = new BasicColumnDefinition();
+		indexedColumn.setIndexName("idx_indexed");
+		indexedColumn.setIndexType(ColumnIndexType.KEYS);
+		indexedColumn.setName(ByteBuffer.wrap("indexed".getBytes()));
+		indexedColumn.setValidationClass("UTF8Type");
+		indexed.addColumnDefinition(indexedColumn);
+		cluster.addColumnFamily(indexed);
 	}
 
 	@AfterClass
@@ -68,15 +83,54 @@ public class VirpHectorITCase {
 	@SuppressWarnings("unchecked")
 	public void setup() {
 		cluster.truncate("TEST", "BasicTestObject");
+		cluster.truncate("TEST", "HasSecondaryIndex");
 		config = new VirpConfig();
 		config.setMetaDataReader(new AnnotationDrivenRowMapperMetaDataReader());
 		ConfiguredRowMapperSource source = new ConfiguredRowMapperSource();
-		source.setRowMapperClasses(Sets.<Class<?>>newHashSet(BasicSaveObject.class));
+		source.setRowMapperClasses(Sets.<Class<?>>newHashSet(BasicSaveObject.class, SecondaryIndexObject.class));
 		config.setRowMapperSource(source);
 		HectorSessionFactory actionFactory = new HectorSessionFactory();
 		actionFactory.setKeyspace(testKeyspace);
 		config.setSessionFactory(actionFactory);
 		config.init();
+	}
+
+	@SuppressWarnings("unused")
+	@RowMapper(columnFamily = "HasSecondaryIndex")
+	public static class	SecondaryIndexObject {
+
+		@KeyColumn
+		private String key;
+
+		@NamedColumn(name = "indexed")
+		private String indexed;
+
+		@NumberedColumnLong(number = 10)
+		private Long unindexed;
+
+		public String getKey() {
+			return key;
+		}
+
+		public void setKey(String key) {
+			this.key = key;
+		}
+
+		public String getIndexed() {
+			return indexed;
+		}
+
+		public void setIndexed(String indexed) {
+			this.indexed = indexed;
+		}
+
+		public Long getUnindexed() {
+			return unindexed;
+		}
+
+		public void setUnindexed(Long unindexed) {
+			this.unindexed = unindexed;
+		}
 	}
 
 	@SuppressWarnings("unused")
@@ -297,6 +351,49 @@ public class VirpHectorITCase {
 	}
 
 	@Test
+	public void testFindByExampleQueryOnIndexed() {
+		Mutator<String> mutator = HFactory.createMutator(testKeyspace, StringSerializer.get());
+		createIndexedObject(mutator, "foo", "one", Long.valueOf(10));
+		createIndexedObject(mutator, "bar", "one", Long.valueOf(9));
+		createIndexedObject(mutator, "blah", "two", Long.valueOf(10));
+		mutator.execute();
+
+		VirpSession session = config.newSession();
+
+		SecondaryIndexObject test = session.get(SecondaryIndexObject.class, "foo");
+		assertNotNull("sanity check failed", test);
+		assertEquals("foo", test.getKey());
+		assertEquals("one", test.getIndexed());
+		assertEquals(Long.valueOf(10), test.getUnindexed());
+
+		SecondaryIndexObject example = new SecondaryIndexObject();
+		example.setIndexed("one");
+		example.setUnindexed(Long.valueOf(10));
+
+		Query<SecondaryIndexObject> query = session.createByExampleQuery(example);
+		List<SecondaryIndexObject> matches = session.find(query);
+		assertEquals(Integer.valueOf(1), Integer.valueOf(matches.size()));
+
+		SecondaryIndexObject res = matches.get(0);
+		assertEquals("foo", res.getKey());
+		assertEquals("one", res.getIndexed());
+		assertEquals(Long.valueOf(10), res.getUnindexed());
+	}
+
+	@Test
+	public void testFindByExampleQueryOnUnidexed() {
+		expectedException.expect(VirpHectorException.class);
+
+		VirpSession session = config.newSession();
+
+		SecondaryIndexObject example = new SecondaryIndexObject();
+		example.setUnindexed(Long.valueOf(10));
+
+		Query<SecondaryIndexObject> query = session.createByExampleQuery(example);
+		session.find(query);
+	}
+
+	@Test
 	public void testGetMultipleNotNullConfig() {
 		config.setNoColumnsEqualsNullRow(false);
 		Mutator<String> mutator = HFactory.createMutator(testKeyspace, StringSerializer.get());
@@ -344,6 +441,15 @@ public class VirpHectorITCase {
 		assertEquals("one", object.columnOne);
 		assertEquals("two", object.columnTwo);
 		assertEquals(Long.valueOf(22), Long.valueOf(object.columnTen));
+	}
+
+	private void createIndexedObject(Mutator<String> mutator, String key, String indexed, Long unindexed) {
+		Serializer<String> stringSerializer = StringSerializer.get();
+		Serializer<Long> longSerializer = LongSerializer.get();
+		mutator.addInsertion(key, "HasSecondaryIndex",
+				HFactory.createColumn("indexed", indexed, stringSerializer, stringSerializer));
+		mutator.addInsertion(key, "HasSecondaryIndex",
+				HFactory.createColumn(Long.valueOf(10), unindexed, longSerializer, longSerializer));
 	}
 
 	private void createBasicTestObject(Mutator<String> mutator, String key, String columnOne, String columnTwo,

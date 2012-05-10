@@ -3,6 +3,8 @@ package com.jshnd.virp;
 import com.jshnd.virp.config.RowMapperMetaData;
 import com.jshnd.virp.config.SessionAttachmentMode;
 import com.jshnd.virp.exception.VirpOperationException;
+import com.jshnd.virp.query.ByExampleQuery;
+import com.jshnd.virp.query.Query;
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
@@ -78,6 +80,28 @@ public abstract class VirpSession {
 		sanityCheck();
 		RowMapperMetaData<T> meta = getMeta(rowClass);
 		List<T> objects = getWithMeta(meta, keys);
+		return listForSession(objects, meta);
+	}
+
+	public <T> List<T> find(Query<T> query) {
+		sanityCheck();
+		RowMapperMetaData<T> meta = query.getMeta();
+		List<T> objects = doFind(query, meta);
+		return listForSession(objects, meta);
+	}
+
+	@SuppressWarnings("unchecked")
+	public <T> Query<T> createByExampleQuery(T theExample) {
+		return createByExampleQuery((Class<T>) theExample.getClass(), theExample);
+	}
+
+	public <T> Query<T> createByExampleQuery(Class<T> forClass, T theExample) {
+		sanityCheck();
+		RowMapperMetaData<T> meta = getMeta(forClass);
+		return new ByExampleQuery<T>(meta, theExample);
+	}
+
+	private <T> List<T> listForSession(List<T> objects, RowMapperMetaData<T> meta) {
 		List<T> ret;
 		if(attachmentMode.isAttach()) {
 			ret = new ArrayList<T>();
@@ -146,6 +170,8 @@ public abstract class VirpSession {
 	protected abstract <T, K> T doGet(RowMapperMetaData<T> type, K key);
 
 	protected abstract <T, K> List<T> doGet(RowMapperMetaData<T> type, K... keys);
+
+	protected abstract <T> List<T> doFind(Query<T> query, RowMapperMetaData<T> meta);
 
 	protected abstract VirpActionResult doFlush();
 

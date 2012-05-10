@@ -10,6 +10,7 @@ import com.jshnd.virp.config.ConfiguredRowMapperSource;
 import com.jshnd.virp.config.RowMapperMetaData;
 import com.jshnd.virp.config.SessionAttachmentMode;
 import com.jshnd.virp.exception.VirpOperationException;
+import com.jshnd.virp.query.Query;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -54,6 +55,11 @@ public class VirpSessionTest {
 
 		@Override
 		protected <T, K> List<T> doGet(RowMapperMetaData<T> type, K... keys) {
+			return (List<T>) getManyReturns;
+		}
+
+		@Override
+		protected <T> List<T> doFind(Query<T> query, RowMapperMetaData<T> meta) {
 			return (List<T>) getManyReturns;
 		}
 
