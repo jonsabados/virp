@@ -134,6 +134,51 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 	}
 
 	@RowMapper(columnFamily = "dontCare")
+	public static class MultipleDynamicTtlTester {
+
+		@KeyColumn
+		@HasDynamicTimeToLive(identifier = "bar")
+		private String pipe;
+
+		@DynamicTimeToLive(forIdentifier = "bar")
+		private int wrench;
+
+		@DynamicTimeToLive(forIdentifier = "bar")
+		private Integer otherWrench;
+
+		public String getPipe() {
+			return pipe;
+		}
+
+		public void setPipe(String pipe) {
+			this.pipe = pipe;
+		}
+
+		public int getWrench() {
+			return wrench;
+		}
+
+		public void setWrench(int wrench) {
+			this.wrench = wrench;
+		}
+
+		public Integer getOtherWrench() {
+			return otherWrench;
+		}
+
+		public void setOtherWrench(Integer otherWrench) {
+			this.otherWrench = otherWrench;
+		}
+	}
+
+	@Test
+	public void testMultipleDynamicTtls() {
+		expectedException.expect(VirpAnnotationException.class);
+		expectedException.expectMessage("Columns may only have one source for ttl's");
+		testObj.readClass(MultipleDynamicTtlTester.class);
+	}
+
+	@RowMapper(columnFamily = "dontCare")
 	public static class NonIntDynamicTtlTester {
 
 		@KeyColumn
