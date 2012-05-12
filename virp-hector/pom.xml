@@ -8,8 +8,9 @@
         <version>0.0.2-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <name>virp-hector</name>
+    <name>Virp Hector</name>
     <artifactId>virp-hector</artifactId>
+    <packaging>jar</packaging>
 
     <profiles>
         <profile>

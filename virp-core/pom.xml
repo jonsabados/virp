@@ -8,8 +8,9 @@
         <version>0.0.2-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <name>virp-core</name>
+    <name>Virp Core</name>
     <artifactId>virp-core</artifactId>
+    <packaging>jar</packaging>
 
     <profiles>
         <profile>
