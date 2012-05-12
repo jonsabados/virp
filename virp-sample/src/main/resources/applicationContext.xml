@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+    <bean id="cassandraHostConfigurator" class="me.prettyprint.cassandra.service.CassandraHostConfigurator">
+        <constructor-arg value="localhost:9170"/>
+    </bean>
+
+    <bean id="cluster" class="me.prettyprint.cassandra.service.ThriftCluster">
+        <constructor-arg value="TestCluster"/>
+        <constructor-arg ref="cassandraHostConfigurator"/>
+    </bean>
+
+    <bean id="consistencyLevelPolicy" class="me.prettyprint.cassandra.model.ConfigurableConsistencyLevel">
+        <property name="defaultReadConsistencyLevel" value="ONE"/>
+    </bean>
+
+    <bean id="keyspace" class="me.prettyprint.hector.api.factory.HFactory" factory-method="createKeyspace">
+        <constructor-arg value="Keyspace1"/>
+        <constructor-arg ref="cluster"/>
+        <constructor-arg ref="consistencyLevelPolicy"/>
+    </bean>
+
+    <bean id="virpConfig" class="com.jshnd.virp.VirpConfig">
+        <property name="rowMapperSource">
+            <bean class="com.jshnd.virp.annotation.ReflectionsRowMapperSource">
+                <property name="basePackage" value="com.jshnd.virp.sample.model" />
+            </bean>
+        </property>
+        <property name="metaDataReader">
+            <bean class="com.jshnd.virp.annotation.AnnotationDrivenRowMapperMetaDataReader">
+                <property name="readProperties" value ="true"/>
+                <property name="readMethods" value="false"/>
+            </bean>
+        </property>
+        <property name="sessionFactory">
+            <bean class="com.jshnd.virp.hector.HectorSessionFactory">
+                <property name="keyspace" ref="keyspace" />
+            </bean>
+        </property>
+    </bean>
+
+</beans>
