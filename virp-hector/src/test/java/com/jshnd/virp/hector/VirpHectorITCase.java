@@ -99,7 +99,7 @@ public class VirpHectorITCase {
 	@RowMapper(columnFamily = "HasSecondaryIndex")
 	public static class	SecondaryIndexObject {
 
-		@KeyColumn
+		@Key
 		private String key;
 
 		@NamedColumn(name = "indexed")
@@ -137,7 +137,7 @@ public class VirpHectorITCase {
 	@RowMapper(columnFamily = "BasicTestObject")
 	public static class BasicSaveObject {
 
-		@KeyColumn
+		@Key
 		private String key;
 
 		@NamedColumn(name = "columnOne")

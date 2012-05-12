@@ -68,7 +68,7 @@ public class AnnotationDrivenRowMapperMetaDataReader implements RowMapperMetaDat
 		}
 		if (ret.getKeyValueManipulator() == null) {
 			throw new VirpAnnotationException(clazz.getCanonicalName() +
-					" missing required annotation " + KeyColumn.class.getCanonicalName());
+					" missing required annotation " + Key.class.getCanonicalName());
 		}
 		ret.setColumnAccessors(getters);
 		return ret;
@@ -77,17 +77,17 @@ public class AnnotationDrivenRowMapperMetaDataReader implements RowMapperMetaDat
 	private void processGetter(AnnotationUtil annotationUtil, RowMapperMetaData meta,
 							   Set<ColumnAccessor<?, ?>> valueAccessors, TimeToLive defaultTimeToLive,
 							   Map<String, ValueAccessor<Integer>> dynamicTimeToLives) {
-		KeyColumn keyColumn = annotationUtil.getAnnotation(KeyColumn.class);
+		Key key = annotationUtil.getAnnotation(Key.class);
 		NamedColumn namedColumn = annotationUtil.getAnnotation(NamedColumn.class);
 		TimeToLive ttl = annotationUtil.getAnnotation(TimeToLive.class);
 		HasDynamicTimeToLive dynamicTtlMarker = annotationUtil.getAnnotation(HasDynamicTimeToLive.class);
 		Set<Annotation> numberedColumns = getNumberColumns(annotationUtil);
-		if (keyColumn != null || namedColumn != null || numberedColumns.size() > 0) {
+		if (key != null || namedColumn != null || numberedColumns.size() > 0) {
 			Method getter = annotationUtil.getGetMethod();
 			Method setter = annotationUtil.getSetMethod();
 			ReflectionMethodValueManipulator<Object> manipulator =
 					new ReflectionMethodValueManipulator<Object>(getter, setter);
-			if (keyColumn != null) {
+			if (key != null) {
 				enforceSingleKeyColumn(meta);
 				meta.setKeyValueManipulator(manipulator);
 			}

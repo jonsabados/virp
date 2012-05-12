@@ -3,7 +3,7 @@ package com.jshnd.virp;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.jshnd.virp.annotation.AnnotationDrivenRowMapperMetaDataReader;
-import com.jshnd.virp.annotation.KeyColumn;
+import com.jshnd.virp.annotation.Key;
 import com.jshnd.virp.annotation.NamedColumn;
 import com.jshnd.virp.annotation.RowMapper;
 import com.jshnd.virp.config.ConfiguredRowMapperSource;
@@ -263,7 +263,7 @@ public class VirpSessionTest {
 	@RowMapper(columnFamily = "someFamily")
 	public static class ProxiedGetTester {
 
-		@KeyColumn
+		@Key
 		private String key;
 
 		@NamedColumn(name = "foo")

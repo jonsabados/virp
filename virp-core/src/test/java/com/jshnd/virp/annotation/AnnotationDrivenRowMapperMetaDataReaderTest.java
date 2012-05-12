@@ -34,12 +34,12 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 	@RowMapper(columnFamily = "dontCare")
 	public static class BadKeyTester {
 
-		@KeyColumn
+		@Key
 		private String wrench;
 
 		private String key;
 
-		@KeyColumn
+		@Key
 		public String getKey() {
 			return key;
 		}
@@ -67,7 +67,7 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 	@RowMapper(columnFamily = "dontCare")
 	public static class MissingDynamicTtlTester {
 
-		@KeyColumn
+		@Key
 		@HasDynamicTimeToLive(identifier = "bar")
 		private String pipe;
 
@@ -101,7 +101,7 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 	@RowMapper(columnFamily = "dontCare")
 	public static class StaticAndDynamicTtlTester {
 
-		@KeyColumn
+		@Key
 		@HasDynamicTimeToLive(identifier = "bar")
 		@TimeToLive(seconds = 30)
 		private String pipe;
@@ -136,7 +136,7 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 	@RowMapper(columnFamily = "dontCare")
 	public static class MultipleDynamicTtlTester {
 
-		@KeyColumn
+		@Key
 		@HasDynamicTimeToLive(identifier = "bar")
 		private String pipe;
 
@@ -181,7 +181,7 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 	@RowMapper(columnFamily = "dontCare")
 	public static class NonIntDynamicTtlTester {
 
-		@KeyColumn
+		@Key
 		@HasDynamicTimeToLive(identifier = "bar")
 		private String pipe;
 
@@ -215,7 +215,7 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 	@RowMapper(columnFamily = "dontCare", defaultTimeToLive = @TimeToLive(seconds = 10))
 	public static class TtlTester {
 
-		@KeyColumn
+		@Key
 		@NamedColumn(name = "foo")
 		@TimeToLive(seconds = 20)
 		private String key;
@@ -296,7 +296,7 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 	@RowMapper(columnFamily = "dontCare")
 	public static class OkPropertyKeyTester {
 
-		@KeyColumn
+		@Key
 		@NamedColumn(name = "foo")
 		private String key;
 
@@ -326,7 +326,7 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 	@RowMapper(columnFamily = "dontCare")
 	public static class NumberedColumnPropertyTester {
 
-		@KeyColumn
+		@Key
 		private String key;
 
 		@NumberedColumnShort(number = 0)
@@ -418,7 +418,7 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 
 		private String key;
 
-		@KeyColumn
+		@Key
 		@NumberedColumnLong(number = 10)
 		public String getKey() {
 			return key;
@@ -446,7 +446,7 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 
 		private boolean key;
 
-		@KeyColumn
+		@Key
 		@NamedColumn(name = "foo")
 		public boolean isKey() {
 			return key;
@@ -474,7 +474,7 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 
 		private String key;
 
-		@KeyColumn
+		@Key
 		@NamedColumn(name = "foo")
 		public String getKey() {
 			return key;
@@ -501,7 +501,7 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 	@RowMapper(columnFamily = "testIng")
 	public static class ColumnFamilyTester {
 
-		@KeyColumn
+		@Key
 		private String key;
 
 		public String getKey() {
@@ -550,7 +550,7 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 			this.someProperty = someProperty;
 		}
 
-		@KeyColumn
+		@Key
 		@NamedColumn(name = "bar")
 		public String getMethodProperty() {
 			return methodProperty;
@@ -637,7 +637,7 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 	public void testMissingKeColumnAnnotation() {
 		expectedException.expect(VirpAnnotationException.class);
 		expectedException.expectMessage(MissingKeyColumnAnnotationTester.class.getCanonicalName()
-				+ " missing required annotation " + KeyColumn.class.getCanonicalName());
+				+ " missing required annotation " + Key.class.getCanonicalName());
 		testObj.readClass(MissingKeyColumnAnnotationTester.class);
 	}
 
@@ -648,7 +648,7 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 
 		private String column;
 
-		@KeyColumn
+		@Key
 		public String getKey() {
 			return key;
 		}
@@ -678,7 +678,7 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 
 		private String column;
 
-		@KeyColumn
+		@Key
 		public String getKey() {
 			return key;
 		}
@@ -709,7 +709,7 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 	@RowMapper(columnFamily = "foo")
 	public static class PropertyWithoutAccessibleGetterMethodTester {
 
-		@KeyColumn
+		@Key
 		private String key;
 
 		@NamedColumn(name = "foo")
@@ -739,7 +739,7 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 	@RowMapper(columnFamily = "foo")
 	public static class PropertyWithoutAccessibleSetterMethodTester {
 
-		@KeyColumn
+		@Key
 		private String key;
 
 		@NamedColumn(name = "foo")
