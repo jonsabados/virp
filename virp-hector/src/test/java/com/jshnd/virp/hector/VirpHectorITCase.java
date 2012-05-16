@@ -51,7 +51,7 @@ public class VirpHectorITCase {
 	public static void startupEmbeddedCluster() throws Exception {
 		EmbeddedServerHelper helper = new EmbeddedServerHelper();
 		helper.setup();
-		cluster = getOrCreateCluster("Test Cluster", "127.0.0.1:9160");
+		cluster = getOrCreateCluster("Test Cluster", "127.0.0.1:9170");
 		BasicKeyspaceDefinition definition = new BasicKeyspaceDefinition();
 		definition.setName("TEST");
 		definition.setStrategyClass("org.apache.cassandra.locator.SimpleStrategy");

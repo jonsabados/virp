@@ -333,6 +333,14 @@ public class VirpSessionTest {
 
 		runProxyTests(result, testRow);
 	}
+	
+	@Test
+	public void testProxiedGetOnNull() throws Exception {
+		setupProxied();
+		testObj.getReturns = null;
+
+		assertNull(testObj.get(ProxiedGetTester.class, "abc"));
+	}
 
 	@Test
 	public void testProxiedList() throws Exception {

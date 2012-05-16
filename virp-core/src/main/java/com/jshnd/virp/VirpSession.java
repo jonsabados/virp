@@ -172,6 +172,9 @@ public abstract class VirpSession {
 
 	@SuppressWarnings("unchecked")
 	private <T> T proxyForSession(T object, RowMapperMetaData<T> meta) {
+		if(object == null) {
+			return null;
+		}
 		return (T) Enhancer.create(object.getClass(), new SessionProxy(object, meta));
 	}
 

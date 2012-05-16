@@ -91,7 +91,7 @@ public class VirpConfig {
 
 	private void configureClass(Class<?> clazz, Map<Class<?>, RowMapperMetaData> workingMap) {
 		log.info("Configuring rowmapper class " + clazz);
-		RowMapperMetaData meta = metaDataReader.readClass(clazz);
+		RowMapperMetaData<?> meta = metaDataReader.readClass(clazz);
 		sessionFactory.setupClass(meta);
 		workingMap.put(clazz, meta);
 	}

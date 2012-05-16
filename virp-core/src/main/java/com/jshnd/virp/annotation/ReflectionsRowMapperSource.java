@@ -19,10 +19,6 @@ package com.jshnd.virp.annotation;
 import com.jshnd.virp.annotation.RowMapper;
 import com.jshnd.virp.config.RowMapperSource;
 import org.reflections.Reflections;
-import org.reflections.util.ClasspathHelper;
-import org.reflections.util.ConfigurationBuilder;
-import org.reflections.util.FilterBuilder;
-
 import java.util.Collection;
 
 public class ReflectionsRowMapperSource implements RowMapperSource {
@@ -30,10 +26,7 @@ public class ReflectionsRowMapperSource implements RowMapperSource {
 	private String basePackage;
 
 	public Collection<Class<?>> getRowMapperClasses() {
-		ConfigurationBuilder builder = new ConfigurationBuilder();
-		builder.setUrls(ClasspathHelper.forJavaClassPath());
-		builder.filterInputsBy(new FilterBuilder.Include(FilterBuilder.prefix(basePackage + ".")));
-		Reflections reflections = new Reflections(builder);
+		Reflections reflections = new Reflections(basePackage + ".");
 		return reflections.getTypesAnnotatedWith(RowMapper.class);
 	}
 

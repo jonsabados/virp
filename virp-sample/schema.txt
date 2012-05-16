@@ -1,0 +1,9 @@
+create keyspace VirpSample;
+use VirpSample;
+create column family VirpUser with comparator = UTF8Type;
+update column family VirpUser with
+        column_metadata =
+        [
+        	{column_name: firstName, validation_class: UTF8Type},
+        	{column_name: lastName, validation_class: UTF8Type, index_type: KEYS}
+        ];
