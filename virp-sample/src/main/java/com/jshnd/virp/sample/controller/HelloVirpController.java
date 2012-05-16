@@ -33,7 +33,7 @@ public class HelloVirpController {
 				return "redirect:my_virps.html";
 			} else {
 				model.put("user", input);
-				return "redirect:new_user.html";
+				return "redirect:edit_user.html";
 			}
 		} finally {
 			session.close();
