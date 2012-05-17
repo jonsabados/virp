@@ -64,6 +64,9 @@ public abstract class VirpSession {
 				}
 				ColumnAccessor<?, ?> accessor = columnAccessors.get(method);
 				if(accessor != null) {
+					if(!open) {
+						throw new VirpOperationException("Attempt to modify detached instance");
+					}
 					doChange(meta, wrapped, accessor);
 				}
 			}
@@ -175,7 +178,7 @@ public abstract class VirpSession {
 		if(object == null) {
 			return null;
 		}
-		return (T) Enhancer.create(object.getClass(), new SessionProxy(object, meta));
+		return (T) Enhancer.create(object.getClass(), new SessionProxy<T>(object, meta));
 	}
 
 	public SessionAttachmentMode getAttachmentMode() {

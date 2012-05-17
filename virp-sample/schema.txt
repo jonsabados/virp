@@ -5,5 +5,16 @@ update column family VirpUser with
         column_metadata =
         [
         	{column_name: firstName, validation_class: UTF8Type},
-        	{column_name: lastName, validation_class: UTF8Type, index_type: KEYS}
+        	{column_name: lastName, validation_class: UTF8Type}
         ];
+
+create column family VirpRecord with comparator = UTF8Type;
+update column family VirpRecord with
+        column_metadata =
+        [
+        	{column_name: uuid, validation_class: UTF8Type},
+        	{column_name: owner, validation_class: UTF8Type, index_type: KEYS}
+        	{column_name: stars, validation_class: BytesType}
+        	{column_name: notes, validation_class: UTF8Type}
+        ];
+        

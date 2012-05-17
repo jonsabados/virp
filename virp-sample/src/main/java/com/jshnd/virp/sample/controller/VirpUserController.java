@@ -8,11 +8,18 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.jshnd.virp.VirpConfig;
 import com.jshnd.virp.VirpSession;
+import com.jshnd.virp.sample.VirpSampleWebSession;
 import com.jshnd.virp.sample.model.VirpUser;
 
 @Controller
+/**
+ * Sample controller showing get/save functionality functionality
+ */
 public class VirpUserController {
 
+	@Autowired
+	private VirpSampleWebSession webSession;
+	
 	@Autowired
 	private VirpConfig virpConfig;
 	
@@ -30,16 +37,19 @@ public class VirpUserController {
 		try {
 			// it would be just as simple to overwrite the row, but for sample purposes
 			// we will try to modify an existing record if possible
-			VirpUser record = session.get(VirpUser.class, user.getEmail());
-			if(record != null) {
+			VirpUser attachedRecord = session.get(VirpUser.class, user.getEmail());
+			if(attachedRecord != null) {
 				// this wont work if flush mode is set to NONE
-				record.setFirstName(user.getFirstName());
-				record.setLastName(user.getLastName());
+				attachedRecord.setFirstName(user.getFirstName());
+				attachedRecord.setLastName(user.getLastName());
+				// note, if we were try to set the email address an VirpOperationException
+				// would be thrown since @Key properties are immutable for attached objects
 			} else {
 				session.save(user);
 			}
 			// this bit is optional if the flush mode is set to AUTO_FLUSH
 			session.flush();
+			webSession.setCurrentUser(user);
 		} finally {
 			session.close();
 		}

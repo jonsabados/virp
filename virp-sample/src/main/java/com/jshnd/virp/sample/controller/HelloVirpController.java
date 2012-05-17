@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.jshnd.virp.VirpConfig;
 import com.jshnd.virp.VirpSession;
+import com.jshnd.virp.config.SessionAttachmentMode;
+import com.jshnd.virp.sample.VirpSampleWebSession;
 import com.jshnd.virp.sample.model.VirpUser;
 
 @Controller
@@ -16,6 +18,9 @@ public class HelloVirpController {
 
 	@Autowired
 	private VirpConfig virpConfig;
+	
+	@Autowired
+	private VirpSampleWebSession webSession;
 	
 	@RequestMapping(value = "index.html", method = RequestMethod.GET)
 	public String sayHello(ModelMap model) {
@@ -25,11 +30,15 @@ public class HelloVirpController {
 
 	@RequestMapping(value = "index.html", method = RequestMethod.POST)
 	public String lookupUser(@ModelAttribute("form") VirpUser input, ModelMap model) {
-		VirpSession session = virpConfig.newSession();
+		// since were not going to be doing anything fancy with the user we grab there's no
+		// reason to make it attached to the session and attachment would prevent the session
+		// from being GC'd until the HttpSession holding the webSession went away
+		VirpSession session = virpConfig.newSession(SessionAttachmentMode.NONE);
 		try {
 			VirpUser attached = session.get(VirpUser.class, input.getEmail());
 			if(attached != null) {
 				model.put("user", attached);
+				webSession.setCurrentUser(attached);
 				return "redirect:my_virps.html";
 			} else {
 				model.put("user", input);
