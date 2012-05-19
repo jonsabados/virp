@@ -69,17 +69,17 @@ public class HectorSession extends VirpSession {
 		addColumns(type, row, accessors);
 	}
 
-	@SuppressWarnings("unchecked")
 	private <T> void addColumns(RowMapperMetaData<T> type, T row, Set<ColumnAccessor<?, ?>> accessors) {
 		String columnFamily = type.getColumnFamily();
 		ValueAccessor<?> keyAccessor = type.getKeyValueManipulator();
-		Serializer keySerializer = (Serializer) keyAccessor.getSessionFactoryData();
+		Serializer<Object> keySerializer = (Serializer<Object>) keyAccessor.getSessionFactoryData();
 		byte[] key = keySerializer.toBytes(keyAccessor.getValue(row));
 		for(ColumnAccessor<?, ?> accessor : accessors) {
 			StaticValueAccessor<?> identifier = accessor.getColumnIdentifier();
 			ValueAccessor<?> value = accessor.getValueManipulator();
-			HColumn hcolumn = HFactory.createColumn(identifier.getValue(), value.getValue(row),
-					(Serializer) identifier.getSessionFactoryData(), (Serializer) value.getSessionFactoryData());
+			HColumn<?, ?> hcolumn = HFactory.createColumn(identifier.getValue(), value.getValue(row),
+					(Serializer<Object>) identifier.getSessionFactoryData(), 
+					(Serializer<Object>) value.getSessionFactoryData());
 			int ttl = accessor.getTimeToLive().getValue(row).intValue();
 			if(ttl != TimeToLive.NONE) {
 				hcolumn.setTtl(ttl);
@@ -89,7 +89,6 @@ public class HectorSession extends VirpSession {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	protected <T, K> T doGet(RowMapperMetaData<T> type, K key) {
 		BytesArraySerializer serializer = BytesArraySerializer.get();
 		SliceQuery<byte[], byte[], byte[]> query =
@@ -148,7 +147,7 @@ public class HectorSession extends VirpSession {
 
 		TypeBits<T, Object> typeBits = new TypeBits<T, Object>(type);
 
-		for(QueryParameter param : virpQuery.getParameters()) {
+		for(QueryParameter<?, ?> param : virpQuery.getParameters()) {
 			addParameter(query, param);
 		}
 		query.setColumnFamily(type.getColumnFamily());
@@ -164,9 +163,9 @@ public class HectorSession extends VirpSession {
 		}
 	}
 
-	private void addParameter(IndexedSlicesQuery<byte[], byte[], byte[]> query, QueryParameter param) {
-		Serializer nameSerializer = (Serializer) param.getColumnIdentifier().getSessionFactoryData();
-		Serializer valueSerializer = (Serializer) param.getSessionFactoryData().getSessionFactoryData();
+	private void addParameter(IndexedSlicesQuery<byte[], byte[], byte[]> query, QueryParameter<?, ?> param) {
+		Serializer<Object> nameSerializer = (Serializer<Object>) param.getColumnIdentifier().getSessionFactoryData();
+		Serializer<Object> valueSerializer = (Serializer<Object>) param.getSessionFactoryData().getSessionFactoryData();
 		byte[] column = nameSerializer.toBytes(param.getColumnIdentifier().getValue());
 		byte[] value = valueSerializer.toBytes(param.getArgument());
 		switch (param.getCriteria()) {
@@ -202,7 +201,7 @@ public class HectorSession extends VirpSession {
 		return ret;
 	}
 
-	private <T, K> void logQuery(RowMapperMetaData<T> type, ResultStatus result, K... keys) {
+	private void logQuery(RowMapperMetaData<?> type, ResultStatus result, Object... keys) {
 		if(log.isTraceEnabled()) {
 			StringBuilder keyString = new StringBuilder();
 			for(int i = 0; i < keys.length; i++) {
@@ -217,7 +216,6 @@ public class HectorSession extends VirpSession {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	private <T, K> T fromSlice(RowMapperMetaData<T> type, TypeBits<T, K> typeBits, ColumnSlice<byte[], byte[]> slice) {
 		if(slice.getColumns().size() == 0 && config.isNoColumnsEqualsNullRow()) {
 			return null;
@@ -233,8 +231,8 @@ public class HectorSession extends VirpSession {
 			if (column != null) {
 				for (int j = 0; j < typeBits.columnCount; j++) {
 					if (equal(column.getName(), typeBits.columns[j])) {
-						ValueManipulator manipulator = typeBits.manipulators[j];
-						Serializer valueSerializer = (Serializer) manipulator.getSessionFactoryData();
+						ValueManipulator<Object> manipulator = typeBits.manipulators[j];
+						Serializer<Object> valueSerializer = (Serializer) manipulator.getSessionFactoryData();
 						Object value = valueSerializer.fromBytes(column.getValue());
 						manipulator.setValue(ret, value);
 					}
@@ -270,7 +268,6 @@ public class HectorSession extends VirpSession {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	private static class TypeBits<T, K> {
 		private byte[][] columns;
 		private ValueManipulator[] manipulators;
@@ -286,7 +283,7 @@ public class HectorSession extends VirpSession {
 			manipulators = new ValueManipulator[accessors.size()];
 			columnCount = 0;
 			for(ColumnAccessor<?,?> accessor : type.getColumnAccessors()) {
-				StaticValueAccessor identifier = accessor.getColumnIdentifier();
+				StaticValueAccessor<?> identifier = accessor.getColumnIdentifier();
 				Serializer identifierSerializer = (Serializer) identifier.getSessionFactoryData();
 				columns[columnCount] = identifierSerializer.toBytes(identifier.getValue());
 				manipulators[columnCount] = accessor.getValueManipulator();

@@ -74,7 +74,7 @@ public class AnnotationDrivenRowMapperMetaDataReader implements RowMapperMetaDat
 		return ret;
 	}
 
-	private void processGetter(AnnotationUtil annotationUtil, RowMapperMetaData meta,
+	private void processGetter(AnnotationUtil annotationUtil, RowMapperMetaData<?> meta,
 							   Set<ColumnAccessor<?, ?>> valueAccessors, TimeToLive defaultTimeToLive,
 							   Map<String, ValueAccessor<Integer>> dynamicTimeToLives) {
 		Key key = annotationUtil.getAnnotation(Key.class);
@@ -145,7 +145,6 @@ public class AnnotationDrivenRowMapperMetaDataReader implements RowMapperMetaDat
 		return ret;
 	}
 
-	@SuppressWarnings("unchecked")
 	private void addNumberedColumn(Annotation annotation, Set<ColumnAccessor<?, ?>> valueAccessors,
 								   ReflectionMethodValueManipulator<Object> manipulator,
 								   ValueAccessor<Integer> ttlGetter) {
@@ -164,7 +163,7 @@ public class AnnotationDrivenRowMapperMetaDataReader implements RowMapperMetaDat
 		}
 	}
 
-	private void generateMethodGetters(Class<?> clazz, RowMapperMetaData meta,
+	private void generateMethodGetters(Class<?> clazz, RowMapperMetaData<?> meta,
 									   Set<ColumnAccessor<?, ?>> valueAccessors,
 									   TimeToLive defaultTimeToLive,
 									   Map<String, ValueAccessor<Integer>> dynamicTtls) {
@@ -178,7 +177,7 @@ public class AnnotationDrivenRowMapperMetaDataReader implements RowMapperMetaDat
 		}
 	}
 
-	private void generatePropertyGetters(Class<?> clazz, RowMapperMetaData meta,
+	private void generatePropertyGetters(Class<?> clazz, RowMapperMetaData<?> meta,
 										 Set<ColumnAccessor<?, ?>> valueAccessors,
 										 TimeToLive defaultTimeToLive,
 										 Map<String, ValueAccessor<Integer>> dynamicTtls) {
@@ -223,7 +222,7 @@ public class AnnotationDrivenRowMapperMetaDataReader implements RowMapperMetaDat
 	}
 
 
-	private void enforceSingleKeyColumn(RowMapperMetaData meta) {
+	private void enforceSingleKeyColumn(RowMapperMetaData<?> meta) {
 		if (meta.getKeyValueManipulator() != null) {
 			throw new VirpException("Classes may only have a single key column");
 		}

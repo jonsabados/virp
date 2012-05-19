@@ -12,7 +12,8 @@ public class ReflectionMethodValueManipulatorTest {
 	public void testGetColumnValue() throws SecurityException, NoSuchMethodException {
 		Method method = SomeBean.class.getMethod("getSomeProperty");
 		Method setter = SomeBean.class.getMethod("setSomeProperty", String.class);
-		ReflectionMethodValueManipulator valueAccessorReflection = new ReflectionMethodValueManipulator(method, setter);
+		ReflectionMethodValueManipulator<String> valueAccessorReflection = 
+				new ReflectionMethodValueManipulator<String>(method, setter);
 		SomeBean bean = new SomeBean();
 		bean.setSomeProperty("foo");
 		assertEquals("foo", valueAccessorReflection.getValue(bean));

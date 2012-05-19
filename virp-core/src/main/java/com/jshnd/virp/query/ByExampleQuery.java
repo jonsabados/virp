@@ -24,7 +24,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-public class ByExampleQuery<T> implements Query {
+public class ByExampleQuery<T> implements Query<T> {
 
 	private Set<QueryParameter<?, ?>> parameters = new HashSet<QueryParameter<?, ?>>();
 
@@ -33,7 +33,7 @@ public class ByExampleQuery<T> implements Query {
 	@SuppressWarnings("unchecked")
 	public ByExampleQuery(RowMapperMetaData<T> classMeta, T example) {
 		this.meta = classMeta;
-		for(ColumnAccessor accessor : classMeta.getColumnAccessors()) {
+		for(ColumnAccessor<?, ?> accessor : classMeta.getColumnAccessors()) {
 			if(accessor.getValueManipulator().getValue(example) != null) {
 				parameters.add(new ColumnAccessorQueryParameter(accessor, example, Criteria.EQUAL));
 			}
@@ -46,7 +46,7 @@ public class ByExampleQuery<T> implements Query {
 	}
 
 	@Override
-	public RowMapperMetaData getMeta() {
+	public RowMapperMetaData<T> getMeta() {
 		return meta;
 	}
 }

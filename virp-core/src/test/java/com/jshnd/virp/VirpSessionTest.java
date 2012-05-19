@@ -30,8 +30,6 @@ public class VirpSessionTest {
 
 		boolean closed = false;
 
-		boolean getDone = false;
-
 		private Object getReturns;
 
 		private List<Object> getManyReturns;
@@ -49,7 +47,6 @@ public class VirpSessionTest {
 
 		@Override
 		protected <T, K> T doGet(RowMapperMetaData<T> type, K key) {
-			getDone = true;
 			return (T) getReturns;
 		}
 
@@ -123,6 +120,7 @@ public class VirpSessionTest {
 		expectedException.expect(VirpOperationException.class);
 		expectedException.expectMessage("Session has been closed");
 
+		@SuppressWarnings("unchecked")
 		RowMapperMetaData<Integer> meta = createNiceMock(RowMapperMetaData.class);
 		expect(config.getMetaData(Integer.class)).andReturn(meta).once();
 		replay(config);
@@ -156,6 +154,7 @@ public class VirpSessionTest {
 	@Test
 	public void testGet() {
 		basicSetup();
+		@SuppressWarnings("unchecked")
 		RowMapperMetaData<Object> meta = createNiceMock(RowMapperMetaData.class);
 		expect(config.getMetaData(Object.class)).andReturn(meta).once();
 		replay(config);
@@ -189,6 +188,7 @@ public class VirpSessionTest {
 	@Test
 	public void testGetAsList() {
 		basicSetup();
+		@SuppressWarnings("unchecked")
 		RowMapperMetaData<Object> meta = createMock(RowMapperMetaData.class);
 		expect(config.getMetaData(Object.class)).andReturn(meta).once();
 		replay(config, meta);
@@ -197,7 +197,7 @@ public class VirpSessionTest {
 		Object bar = new Object();
 		testObj.getManyReturns = Arrays.asList(foo, bar);
 
-		List result = testObj.get(Object.class, "foo", "bar");
+		List<Object> result = testObj.get(Object.class, "foo", "bar");
 		assertSame(testObj.getManyReturns, result);
 		assertEquals(2, result.size());
 		assertSame(foo, result.get(0));
@@ -231,7 +231,9 @@ public class VirpSessionTest {
 
 		Object foo = new Object();
 		Object bar = new Object();
+		@SuppressWarnings("unchecked")
 		RowMapperMetaData<Object> meta = createMock(RowMapperMetaData.class);
+		@SuppressWarnings("unchecked")
 		ValueManipulator<String> keyAccessor = createMock(ValueManipulator.class);
 		expect(meta.<String>getKeyValueManipulator()).andReturn(keyAccessor).once();
 		expect(keyAccessor.getValue(foo)).andReturn("foo").once();
@@ -332,6 +334,56 @@ public class VirpSessionTest {
 		ProxiedGetTester result = testObj.get(ProxiedGetTester.class, "abc");
 
 		runProxyTests(result, testRow);
+	}
+	
+	@Test
+	public void testModifiedProxiedKey() throws Exception {
+		expectedException.expect(VirpOperationException.class);
+		expectedException.expectMessage("Attempt to modify key for " 
+				+ ProxiedGetTester.class.getCanonicalName() +", key value: foobar");
+		setupProxied();
+		ProxiedGetTester testRow = new ProxiedGetTester();
+		testRow.setKey("abc");
+		testRow.setValueOne("one");
+		testRow.setValueTwo("two");
+		testObj.getReturns = testRow;
+
+		ProxiedGetTester result = testObj.get(ProxiedGetTester.class, "abc");
+
+		result.setKey("foobar");
+	}
+	
+	@Test
+	public void testModifiedProxiedValueWhenClosed() throws Exception {
+		expectedException.expect(VirpOperationException.class);
+		expectedException.expectMessage("Attempt to modify detached instanc");
+		setupProxied();
+		ProxiedGetTester testRow = new ProxiedGetTester();
+		testRow.setKey("abc");
+		testRow.setValueOne("one");
+		testRow.setValueTwo("two");
+		testObj.getReturns = testRow;
+
+		ProxiedGetTester result = testObj.get(ProxiedGetTester.class, "abc");
+
+		testObj.close();
+		result.setValueOne("bar");
+	}
+	
+	@Test
+	public void testModifiedProxiedUnmappedValueWhenClosed() throws Exception {
+		setupProxied();
+		ProxiedGetTester testRow = new ProxiedGetTester();
+		testRow.setKey("abc");
+		testRow.setValueOne("one");
+		testRow.setValueTwo("two");
+		testObj.getReturns = testRow;
+
+		ProxiedGetTester result = testObj.get(ProxiedGetTester.class, "abc");
+
+		testObj.close();
+		result.setNotMapped("bar");
+		assertEquals("bar", result.getNotMapped());
 	}
 	
 	@Test

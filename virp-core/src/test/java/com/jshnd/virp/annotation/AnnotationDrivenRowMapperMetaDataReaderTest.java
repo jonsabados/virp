@@ -318,7 +318,7 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 		assertEquals("fooBar", meta.getKeyValueManipulator().getValue(bean));
 		assertEquals(String.class, meta.getKeyValueManipulator().getValueType());
 		assertEquals(1, meta.getColumnAccessors().size());
-		ColumnAccessor getter = Iterables.getFirst(meta.getColumnAccessors(), null);
+		ColumnAccessor<?, ?> getter = Iterables.getFirst(meta.getColumnAccessors(), null);
 		assertEquals("foo", getter.getColumnIdentifier().getValue());
 		assertEquals("fooBar", getter.getValueManipulator().getValue(bean));
 	}
@@ -402,7 +402,7 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 		Class<?>[] expected = new Class<?>[] {Short.class, Integer.class, Long.class, Float.class, Double.class};
 		int hitCount = 0;
 		for(ColumnAccessor<?, ?> accessor : meta.getColumnAccessors()) {
-			StaticValueAccessor identifier = accessor.getColumnIdentifier();
+			StaticValueAccessor<?> identifier = accessor.getColumnIdentifier();
 			Class<?> type = identifier.getValueType();
 			for(int i = 0; i < expected.length; i++) {
 				if(type.equals(expected[i])) {
@@ -435,7 +435,7 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 		NumberedColumnMethodTester bean = new NumberedColumnMethodTester();
 		bean.setKey("fooBar");
 		assertEquals(1, meta.getColumnAccessors().size());
-		ColumnAccessor getter = Iterables.getFirst(meta.getColumnAccessors(), null);
+		ColumnAccessor<?, ?> getter = Iterables.getFirst(meta.getColumnAccessors(), null);
 		assertEquals(Long.valueOf(10), getter.getColumnIdentifier().getValue());
 		assertEquals(Long.class, getter.getColumnIdentifier().getValueType());
 		assertEquals("fooBar", getter.getValueManipulator().getValue(bean));
@@ -463,7 +463,7 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 		BooleanColumnMethodTester bean = new BooleanColumnMethodTester();
 		bean.setKey(true);
 		assertEquals(1, meta.getColumnAccessors().size());
-		ColumnAccessor getter = Iterables.getFirst(meta.getColumnAccessors(), null);
+		ColumnAccessor<?, ?> getter = Iterables.getFirst(meta.getColumnAccessors(), null);
 		assertEquals("foo", getter.getColumnIdentifier().getValue());
 		assertEquals(String.class, getter.getColumnIdentifier().getValueType());
 		assertEquals(Boolean.TRUE, getter.getValueManipulator().getValue(bean));
@@ -493,7 +493,7 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 		bean.setKey("fooBar");
 		assertEquals("fooBar", meta.getKeyValueManipulator().getValue(bean));
 		assertEquals(String.class, meta.getKeyValueManipulator().getValueType());
-		ColumnAccessor getter = Iterables.getFirst(meta.getColumnAccessors(), null);
+		ColumnAccessor<?, ?> getter = Iterables.getFirst(meta.getColumnAccessors(), null);
 		assertEquals("foo", getter.getColumnIdentifier().getValue());
 		assertEquals("fooBar", getter.getValueManipulator().getValue(bean));
 	}
@@ -515,7 +515,7 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 
 	@Test
 	public void testColumnFamily() {
-		RowMapperMetaData meta = testObj.readClass(ColumnFamilyTester.class);
+		RowMapperMetaData<ColumnFamilyTester> meta = testObj.readClass(ColumnFamilyTester.class);
 		assertEquals("testIng", meta.getColumnFamily());
 	}
 
@@ -573,11 +573,11 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 	@Test
 	public void testReadClassMethodsOnly() {
 		testObj.setReadProperties(false);
-		RowMapperMetaData meta = testObj.readClass(MethodOnlyReadingTester.class);
+		RowMapperMetaData<MethodOnlyReadingTester> meta = testObj.readClass(MethodOnlyReadingTester.class);
 		assertEquals(MethodOnlyReadingTester.class, meta.getRowMapperClass());
 		Set<ColumnAccessor<?,?>> valueAccessors = meta.getColumnAccessors();
 		assertEquals(1, valueAccessors.size());
-		ColumnAccessor getter = Iterables.getFirst(valueAccessors, null);
+		ColumnAccessor<?, ?> getter = Iterables.getFirst(valueAccessors, null);
 		assertNotNull(getter);
 
 		MethodOnlyReadingTester source = new MethodOnlyReadingTester();
@@ -592,11 +592,11 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 	@Test
 	public void testReadClassPropertiesOnly() {
 		testObj.setReadMethods(false);
-		RowMapperMetaData meta = testObj.readClass(SomeBean.class);
+		RowMapperMetaData<SomeBean> meta = testObj.readClass(SomeBean.class);
 		assertEquals(SomeBean.class, meta.getRowMapperClass());
 		Set<ColumnAccessor<?, ?>> valueAccessors = meta.getColumnAccessors();
 		assertEquals(1, valueAccessors.size());
-		ColumnAccessor getter = Iterables.getFirst(valueAccessors, null);
+		ColumnAccessor<?, ?> getter = Iterables.getFirst(valueAccessors, null);
 		assertNotNull(getter);
 
 		SomeBean source = new SomeBean();

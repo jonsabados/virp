@@ -13,8 +13,11 @@ public class ColumnAccessorQueryParameterTest {
 
 	@Test
 	public void testConstruction() throws Exception {
+		@SuppressWarnings("unchecked")
 		ColumnAccessor<Object, Object> accessor = createMock(ColumnAccessor.class);
+		@SuppressWarnings("unchecked")
 		StaticValueAccessor<Object> identifier = createMock(StaticValueAccessor.class);
+		@SuppressWarnings("unchecked")
 		ValueManipulator<Object> manipulator = createMock(ValueManipulator.class);
 		Object example = new Object();
 		Object arg = new Object();
