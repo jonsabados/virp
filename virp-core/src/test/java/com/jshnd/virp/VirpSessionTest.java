@@ -28,6 +28,8 @@ public class VirpSessionTest {
 
 		boolean saveDone = false;
 
+		boolean deleteDone = false;
+		
 		boolean closed = false;
 
 		private Object getReturns;
@@ -43,6 +45,11 @@ public class VirpSessionTest {
 		@Override
 		protected <T> void doSave(RowMapperMetaData<T> type, T row) {
 			saveDone = true;
+		}
+
+		@Override
+		protected <T> void doDelete(RowMapperMetaData<T> type, T row) {
+			deleteDone = true;
 		}
 
 		@Override
@@ -117,8 +124,6 @@ public class VirpSessionTest {
 	@Test
 	public void testSave() {
 		basicSetup();
-		expectedException.expect(VirpOperationException.class);
-		expectedException.expectMessage("Session has been closed");
 
 		@SuppressWarnings("unchecked")
 		RowMapperMetaData<Integer> meta = createNiceMock(RowMapperMetaData.class);
@@ -127,8 +132,30 @@ public class VirpSessionTest {
 
 		testObj.save(Integer.valueOf(20));
 		assertTrue(testObj.saveDone);
+	}
+	
+	@Test
+	public void testDeleteClosed() {
+		basicSetup();
+		expectedException.expect(VirpOperationException.class);
+		expectedException.expectMessage("Session has been closed");
+
 		testObj.close();
-		testObj.save(Integer.valueOf(21));
+
+		testObj.delete(Integer.valueOf(20));
+	}
+
+	@Test
+	public void testDelete() {
+		basicSetup();
+
+		@SuppressWarnings("unchecked")
+		RowMapperMetaData<Integer> meta = createNiceMock(RowMapperMetaData.class);
+		expect(config.getMetaData(Integer.class)).andReturn(meta).once();
+		replay(config);
+
+		testObj.delete(Integer.valueOf(20));
+		assertTrue(testObj.deleteDone);
 	}
 
 	@Test
@@ -354,7 +381,7 @@ public class VirpSessionTest {
 	}
 	
 	@Test
-	public void testModifiedProxiedValueWhenClosed() throws Exception {
+	public void testModifiedProxiedValueWhenClosed() {
 		expectedException.expect(VirpOperationException.class);
 		expectedException.expectMessage("Attempt to modify detached instanc");
 		setupProxied();
@@ -371,7 +398,7 @@ public class VirpSessionTest {
 	}
 	
 	@Test
-	public void testModifiedProxiedUnmappedValueWhenClosed() throws Exception {
+	public void testModifiedProxiedUnmappedValueWhenClosed() {
 		setupProxied();
 		ProxiedGetTester testRow = new ProxiedGetTester();
 		testRow.setKey("abc");
@@ -395,7 +422,7 @@ public class VirpSessionTest {
 	}
 
 	@Test
-	public void testProxiedList() throws Exception {
+	public void testProxiedList() {
 		setupProxied();
 		ProxiedGetTester testRow1 = new ProxiedGetTester();
 		testRow1.setKey("abc");
@@ -414,6 +441,23 @@ public class VirpSessionTest {
 		runProxyTests(result.get(1), testRow2);
 	}
 
+	@Test
+	public void testGetDetachedInstance() {
+		setupProxied();
+		ProxiedGetTester testRow = new ProxiedGetTester();
+		testRow.setKey("abc");
+		testRow.setValueOne("one");
+		testRow.setValueTwo("two");
+		
+		testObj.getReturns = testRow;
+
+		ProxiedGetTester result = testObj.get(ProxiedGetTester.class, "abc");
+
+		assertNotSame(testRow, result);
+		ProxiedGetTester realRow = testObj.detachedInstance(result);
+		assertSame(testRow, realRow);
+	}
+	
 	private void runProxyTests(ProxiedGetTester fromSession, ProxiedGetTester base) {
 
 		assertNotSame(fromSession, base);

@@ -16,17 +16,23 @@
 
 package com.jshnd.virp;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import net.sf.cglib.proxy.Enhancer;
+import net.sf.cglib.proxy.MethodInterceptor;
+import net.sf.cglib.proxy.MethodProxy;
+
 import com.jshnd.virp.config.RowMapperMetaData;
 import com.jshnd.virp.config.SessionAttachmentMode;
 import com.jshnd.virp.exception.VirpOperationException;
 import com.jshnd.virp.query.ByExampleQuery;
 import com.jshnd.virp.query.Query;
-import net.sf.cglib.proxy.Enhancer;
-import net.sf.cglib.proxy.MethodInterceptor;
-import net.sf.cglib.proxy.MethodProxy;
-
-import java.lang.reflect.Method;
-import java.util.*;
 
 public abstract class VirpSession {
 
@@ -36,7 +42,7 @@ public abstract class VirpSession {
 
 	private boolean open = true;
 
-	private class SessionProxy<T> implements MethodInterceptor {
+	private class SessionProxy<T> implements MethodInterceptor, VirpProxy<T> {
 
 		private T wrapped;
 
@@ -45,7 +51,7 @@ public abstract class VirpSession {
 		private Method keySetter;
 
 		private Map<Method, ColumnAccessor<?, ?>> columnAccessors;
-
+		
 		SessionProxy(T wrapped, RowMapperMetaData<T> meta) {
 			this.wrapped = wrapped;
 			this.meta = meta;
@@ -55,6 +61,20 @@ public abstract class VirpSession {
 
 		@Override
 		public Object intercept(Object proxy, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
+			if(method.getDeclaringClass().equals(VirpProxy.class)) {
+				return wrappedMethod(method, args);
+			} else {
+				return delegate(method, args);
+			}
+		}
+
+		private Object wrappedMethod(Method method, Object[] args) 
+				throws IllegalAccessException, InvocationTargetException {
+			return method.invoke(this, args);
+		}
+		
+		private Object delegate(Method method, Object[] args)
+				throws IllegalAccessException, InvocationTargetException {
 			Object ret = method.invoke(wrapped, args);
 			if(args.length == 1) {
 				if(method.equals(keySetter)) {
@@ -72,6 +92,11 @@ public abstract class VirpSession {
 			}
 			return ret;
 		}
+
+		@Override
+		public T getInstanceVirpWrapped() {
+			return wrapped;
+		}
 	}
 
 	public VirpSession(VirpConfig config, SessionAttachmentMode attachmentMode) {
@@ -79,15 +104,19 @@ public abstract class VirpSession {
 		this.attachmentMode = attachmentMode;
 	}
 
-	@SuppressWarnings("unchecked")
 	public <T> void save(T row) {
 		sanityCheck();
-		doSave(getMeta((Class<T>) row.getClass()), row);
+		doSave(getMetaForInstance(row), row);
 	}
-
+	
+	public <T> void delete(T row) {
+		sanityCheck();
+		doDelete(getMetaForInstance(row), row);
+	}
+	
 	public <T, K> T get(Class<T> rowClass, K key) {
 		sanityCheck();
-		RowMapperMetaData<T> meta = getMeta(rowClass);
+		RowMapperMetaData<T> meta = getMetaForClass(rowClass);
 		T ret = doGet(meta, key);
 		if(attachmentMode.isAttach()) {
 			ret = proxyForSession(ret, meta);
@@ -97,7 +126,7 @@ public abstract class VirpSession {
 
 	public <T, K> List<T> get(Class<T> rowClass, K... keys) {
 		sanityCheck();
-		RowMapperMetaData<T> meta = getMeta(rowClass);
+		RowMapperMetaData<T> meta = getMetaForClass(rowClass);
 		List<T> objects = getWithMeta(meta, keys);
 		return listForSession(objects, meta);
 	}
@@ -109,14 +138,9 @@ public abstract class VirpSession {
 		return listForSession(objects, meta);
 	}
 
-	@SuppressWarnings("unchecked")
 	public <T> Query<T> createByExampleQuery(T theExample) {
-		return createByExampleQuery((Class<T>) theExample.getClass(), theExample);
-	}
-
-	public <T> Query<T> createByExampleQuery(Class<T> forClass, T theExample) {
 		sanityCheck();
-		RowMapperMetaData<T> meta = getMeta(forClass);
+		RowMapperMetaData<T> meta = getMetaForInstance(theExample);
 		return new ByExampleQuery<T>(meta, theExample);
 	}
 
@@ -139,7 +163,7 @@ public abstract class VirpSession {
 
 	public <T, K> Map<K, T> getAsMap(Class<T> rowClass, K... keys) {
 		sanityCheck();
-		RowMapperMetaData<T> meta = getMeta(rowClass);
+		RowMapperMetaData<T> meta = getMetaForClass(rowClass);
 		Collection<T> values = getWithMeta(meta, keys);
 		ValueAccessor<K> accessor = meta.getKeyValueManipulator();
 		Map<K, T> ret = new HashMap<K, T>();
@@ -158,9 +182,25 @@ public abstract class VirpSession {
 	public VirpActionResult flush() {
 		return doFlush();
 	}
-
-	private <T> RowMapperMetaData<T> getMeta(Class<T> type) {
-		RowMapperMetaData<T> ret = config.getMetaData(type);
+	
+	@SuppressWarnings("unchecked")
+	public <T, V extends T> T detachedInstance(V potentiallyAttachedInstance) {
+		T ret;
+		if(potentiallyAttachedInstance instanceof VirpProxy) {
+			ret = ((VirpProxy<T>)potentiallyAttachedInstance).getInstanceVirpWrapped();
+		} else {
+			ret = potentiallyAttachedInstance;
+		}
+		return ret;
+	}
+	
+	private <T, V extends T> RowMapperMetaData<T> getMetaForInstance(V forInstance) {
+		return getMetaForClass(detachedInstance(forInstance).getClass());
+	}
+	
+	private <T> RowMapperMetaData<T> getMetaForClass(Class<?> type) {
+		@SuppressWarnings("unchecked")
+		RowMapperMetaData<T> ret = (RowMapperMetaData<T>) config.getMetaData(type);
 		if(ret == null) {
 			throw new VirpOperationException("Unconfigured class " + type.getName());
 		}
@@ -178,7 +218,9 @@ public abstract class VirpSession {
 		if(object == null) {
 			return null;
 		}
-		return (T) Enhancer.create(object.getClass(), new SessionProxy<T>(object, meta));
+		return (T) Enhancer.create(object.getClass(),
+									new Class[] { VirpProxy.class }, 
+									new SessionProxy<T>(object, meta));
 	}
 
 	public SessionAttachmentMode getAttachmentMode() {
@@ -186,6 +228,8 @@ public abstract class VirpSession {
 	}
 
 	protected abstract <T> void doSave(RowMapperMetaData<T> type, T row);
+	
+	protected abstract <T> void doDelete(RowMapperMetaData<T> type, T row);
 
 	protected abstract <T> void doChange(RowMapperMetaData<T> type, T row, ColumnAccessor<?, ?> changeAccessor);
 
@@ -194,7 +238,7 @@ public abstract class VirpSession {
 	protected abstract <T, K> List<T> doGet(RowMapperMetaData<T> type, K... keys);
 
 	protected abstract <T> List<T> doFind(Query<T> query, RowMapperMetaData<T> meta);
-
+	
 	protected abstract VirpActionResult doFlush();
 
 }

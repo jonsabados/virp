@@ -63,6 +63,13 @@ public class HectorSession extends VirpSession {
 	}
 
 	@Override
+	protected <T> void doDelete(RowMapperMetaData<T> type, T row) {
+		ValueManipulator<Object> keyManipulator = type.getKeyValueManipulator();
+		Serializer<Object> keySerializer = (Serializer<Object>) keyManipulator.getSessionFactoryData();
+		mutator.addDeletion(keySerializer.toBytes(keyManipulator.getValue(row)), type.getColumnFamily());
+	}
+
+	@Override
 	protected <T> void doChange(RowMapperMetaData<T> type, T row, ColumnAccessor<?, ?> accessor) {
 		Set<ColumnAccessor<?, ?>> accessors = new HashSet<ColumnAccessor<?, ?>>(1);
 		accessors.add(accessor);

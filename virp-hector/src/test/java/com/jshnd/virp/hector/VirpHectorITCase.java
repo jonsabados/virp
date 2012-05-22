@@ -80,7 +80,6 @@ public class VirpHectorITCase {
 	}
 
 	@Before
-	@SuppressWarnings("unchecked")
 	public void setup() {
 		cluster.truncate("TEST", "BasicTestObject");
 		cluster.truncate("TEST", "HasSecondaryIndex");
@@ -95,7 +94,6 @@ public class VirpHectorITCase {
 		config.init();
 	}
 
-	@SuppressWarnings("unused")
 	@RowMapper(columnFamily = "HasSecondaryIndex")
 	public static class	SecondaryIndexObject {
 
@@ -133,7 +131,6 @@ public class VirpHectorITCase {
 		}
 	}
 
-	@SuppressWarnings("unused")
 	@RowMapper(columnFamily = "BasicTestObject")
 	public static class BasicSaveObject {
 
@@ -195,29 +192,63 @@ public class VirpHectorITCase {
 		session.save(row);
 		session.close();
 
+		verifyBasicSaveObject("save", "valueForColumnOne", "valueForColumnTwo", Long.valueOf(20));
+	}
+
+	private void verifyBasicSaveObject(String key, String columnOne, String columnTwo, Long col10) {
 		Serializer<String> stringSerializer = StringSerializer.get();
 		SliceQuery<String, String, String> query =
 				HFactory.createSliceQuery(testKeyspace, stringSerializer, stringSerializer, stringSerializer);
 		query.setColumnFamily("BasicTestObject");
-		query.setKey("save");
+		query.setKey(key);
 		query.setColumnNames("columnOne", "columnTwo");
 		QueryResult<ColumnSlice<String, String>> result = query.execute();
 		HColumn<String, String> one = result.get().getColumnByName("columnOne");
-		assertEquals("valueForColumnOne", one.getValue());
-		assertEquals(Integer.valueOf(20), Integer.valueOf(one.getTtl()));
+		if(columnOne == null) {
+			assertNull(one);
+		} else {
+			assertEquals(columnOne, one.getValue());
+			assertEquals(Integer.valueOf(20), Integer.valueOf(one.getTtl()));
+		}
 		HColumn<String, String> two = result.get().getColumnByName("columnTwo");
-		assertEquals("valueForColumnTwo", two.getValue());
-		assertEquals(Integer.valueOf(0), Integer.valueOf(two.getTtl()));
+		if(columnTwo == null) {
+			assertNull(two);
+		} else {
+			assertEquals(columnTwo, two.getValue());
+			assertEquals(Integer.valueOf(0), Integer.valueOf(two.getTtl()));
+		}
 		Serializer<Long> longSerializer = LongSerializer.get();
 		ColumnQuery<String, Long, Long> query2 =
 				HFactory.createColumnQuery(testKeyspace, stringSerializer, longSerializer, longSerializer);
 		query2.setColumnFamily("BasicTestObject");
-		query2.setKey("save");
+		query2.setKey(key);
 		query2.setName(Long.valueOf(10));
 		QueryResult<HColumn<Long, Long>> res = query2.execute();
-		assertEquals(Long.valueOf(20), res.get().getValue());
+		if(col10 == null) {
+			assertNull(res.get());
+		} else {
+			assertEquals(col10, res.get().getValue());
+		}
 	}
 
+	@Test
+	public void testDelete() throws Exception {
+		Mutator<String> mutator = HFactory.createMutator(testKeyspace, StringSerializer.get());
+		createBasicTestObject(mutator, "delete", "foo", "bar", Long.valueOf(21));
+		mutator.execute();
+
+		VirpSession session = config.newSession(SessionAttachmentMode.MANUAL_FLUSH);
+		BasicSaveObject res = session.get(BasicSaveObject.class, "delete");
+		session.delete(res);
+		// should not delete until flush
+		verifyBasicSaveObject("delete", "foo", "bar", Long.valueOf(21));
+		session.flush();
+		verifyBasicSaveObject("delete", null, null, null);
+		
+		session.close();
+	}
+
+	
 	@Test
 	public void testBasicRead() {
 		Mutator<String> mutator = HFactory.createMutator(testKeyspace, StringSerializer.get());
@@ -457,7 +488,7 @@ public class VirpHectorITCase {
 		Serializer<String> stringSerializer = StringSerializer.get();
 		Serializer<Long> longSerializer = LongSerializer.get();
 		mutator.addInsertion(key, "BasicTestObject",
-				HFactory.createColumn("columnOne", columnOne, stringSerializer, stringSerializer));
+				HFactory.createColumn("columnOne", columnOne, 20, stringSerializer, stringSerializer));
 		mutator.addInsertion(key, "BasicTestObject",
 				HFactory.createColumn("columnTwo", columnTwo, stringSerializer, stringSerializer));
 		mutator.addInsertion(key, "BasicTestObject",
