@@ -260,6 +260,11 @@ public class HectorSession extends VirpSession {
 		}
 		return true;
 	}
+	
+	@Override
+	protected void doClose() {
+		
+	}
 
 	@Override
 	public HectorActionResult doFlush() throws VirpException {

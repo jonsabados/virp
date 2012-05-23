@@ -51,11 +51,13 @@ public class HectorSessionFactory implements VirpSessionFactory {
 		} else {
 			if (type.isAssignableFrom(String.class)) {
 				accessor.setSessionFactoryData(StringSerializer.get());
+			} else 	if (type.isAssignableFrom(Character.class)) {
+				accessor.setSessionFactoryData(CharSerializer.get());
 			} else if (type.isAssignableFrom(Long.class)) {
 				accessor.setSessionFactoryData(LongSerializer.get());
 			} else if (type.isAssignableFrom(Integer.class)) {
 				accessor.setSessionFactoryData(IntegerSerializer.get());
-			} else if (type.isAssignableFrom(ShortSerializer.class)) {
+			} else if (type.isAssignableFrom(Short.class)) {
 				accessor.setSessionFactoryData(ShortSerializer.get());
 			} else if (type.isAssignableFrom(Byte.class)) {
 				accessor.setSessionFactoryData(ByteSerializer.get());

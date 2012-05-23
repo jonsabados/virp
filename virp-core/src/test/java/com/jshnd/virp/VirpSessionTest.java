@@ -68,8 +68,12 @@ public class VirpSessionTest {
 		}
 
 		@Override
-		protected VirpActionResult doFlush() {
+		protected void doClose() {
 			closed = true;
+		}
+
+		@Override
+		protected VirpActionResult doFlush() {
 			return createMock(VirpActionResult.class);
 		}
 
@@ -279,13 +283,30 @@ public class VirpSessionTest {
 	}
 
 	@Test
-	public void testClose() {
+	public void testCloseNoAutoFlush() {
 		basicSetup();
+		testObj = new TestSession(config, SessionAttachmentMode.MANUAL_FLUSH);
+		
+		assertSame(VirpActionResult.NONE, testObj.close());
+		assertTrue(testObj.closed);
+	}
+	
+	@Test
+	public void testCloseAutoFlush() {
+		basicSetup();
+		testObj = new TestSession(config, SessionAttachmentMode.AUTO_FLUSH);
+		
+		assertNotSame(VirpActionResult.NONE, testObj.close());
+		assertTrue(testObj.closed);
+	}
+	
+	@Test
+	public void testCloseClosed() {
 		expectedException.expect(VirpOperationException.class);
 		expectedException.expectMessage("Session has been closed");
-
+		
+		basicSetup();
 		testObj.close();
-		assertTrue(testObj.closed);
 		testObj.close();
 	}
 

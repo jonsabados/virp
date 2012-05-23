@@ -24,7 +24,7 @@ public class VirpRecord {
 
 	// and we will let the user specify how long to hold onto the star rating
 	@HasDynamicTimeToLive(identifier = "stars")
-	@NamedColumn(name = "starts")
+	@NamedColumn(name = "stars")
 	private Short starRating;
 	
 	@DynamicTimeToLive(forIdentifier = "stars")

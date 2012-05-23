@@ -2,10 +2,12 @@ package com.jshnd.virp.sample.controller;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
@@ -39,7 +41,7 @@ public class VirpRecordController {
 			int withStars = 0;
 			int totalStars = 0;
 			for(VirpRecord record : allVirps) {
-				if(record.getUuid() != null) {
+				if(record.getNotes() != null) {
 					activeVirps.add(record);
 				}
 				if(record.getStarRating() != null) {
@@ -50,12 +52,29 @@ public class VirpRecordController {
 			model.put("virpCount", Integer.valueOf(allVirps.size()));
 			model.put("activeVirps", activeVirps);
 			if(withStars > 0) {
-				model.put("averageRating", Double.valueOf((double)totalStars/ (double)totalStars));
+				model.put("averageRating", Double.valueOf((double)totalStars/(double)withStars));
 			}
 		} finally {
 			session.close();
 		}
-		return "virps.jsp";
+		return "virps";
+	}
+	
+	@RequestMapping(value = "my_virps.html", method = RequestMethod.POST)
+	public String createVirp(@ModelAttribute("virp") VirpRecord toCreate) {
+		if(webSession.getCurrentUser() == null) {
+			return "redirect:index.html";
+		}
+		toCreate.setOwner(webSession.getCurrentUser().getEmail());
+		toCreate.setUuid(UUID.randomUUID().toString());
+		VirpSession session = virpConfig.newSession();
+		try {
+			session.save(toCreate);
+			session.flush();
+		} finally {
+			session.close();
+		}
+		return "redirect:my_virps.html";
 	}
 	
 }

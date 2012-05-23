@@ -176,7 +176,12 @@ public abstract class VirpSession {
 	public VirpActionResult close() {
 		sanityCheck();
 		open = false;
-		return flush();
+		doClose();
+		if(attachmentMode.isAutoFlush()) {
+			return flush();
+		} else {
+			return VirpActionResult.NONE;
+		}
 	}
 
 	public VirpActionResult flush() {
@@ -238,6 +243,8 @@ public abstract class VirpSession {
 	protected abstract <T, K> List<T> doGet(RowMapperMetaData<T> type, K... keys);
 
 	protected abstract <T> List<T> doFind(Query<T> query, RowMapperMetaData<T> meta);
+	
+	protected abstract void doClose();
 	
 	protected abstract VirpActionResult doFlush();
 

@@ -4,7 +4,10 @@ import com.google.common.collect.Sets;
 import com.jshnd.virp.*;
 import com.jshnd.virp.annotation.TimeToLive;
 import com.jshnd.virp.config.RowMapperMetaData;
+
+import me.prettyprint.cassandra.serializers.CharSerializer;
 import me.prettyprint.cassandra.serializers.LongSerializer;
+import me.prettyprint.cassandra.serializers.ShortSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import org.junit.Before;
 import org.junit.Test;
@@ -82,7 +85,39 @@ public class HectorSessionFactoryTest {
 		assertSame(LongSerializer.get(), accessor2.getSessionFactoryData());
 		assertSame(LongSerializer.get(), accessor3.getSessionFactoryData());
 	}
+	
+	@Test
+	public void testShortSerializationRegistration() {
+		RowMapperMetaData<Object> type = new RowMapperMetaData<Object>(Object.class);
+		TestValueAccessor<Short> accessor1 = new TestValueAccessor<Short>( Short.class);
+		StaticValueAccessor<Short> accessor2 = new StaticValueAccessor<Short>(Short.valueOf((short) 1), Short.class);
+		TestValueAccessor<Short> accessor3 = new TestValueAccessor<Short>(Short.class);
+		type.setKeyValueManipulator(accessor1);
+		BasicColumnAccessor<Short, Short> columnAccessor =
+				new BasicColumnAccessor<Short, Short>(accessor2, accessor3, new HardCodedValueAccessor<Integer>(TimeToLive.NONE));
+		type.setColumnAccessors(Sets.<ColumnAccessor<?,?>>newHashSet(columnAccessor));
+		testObj.setupClass(type);
+		assertSame(ShortSerializer.get(), accessor1.getSessionFactoryData());
+		assertSame(ShortSerializer.get(), accessor2.getSessionFactoryData());
+		assertSame(ShortSerializer.get(), accessor3.getSessionFactoryData());
+	}
 
+	@Test
+	public void testCharSerializationRegistration() {
+		RowMapperMetaData<Object> type = new RowMapperMetaData<Object>(Object.class);
+		TestValueAccessor<Character> accessor1 = new TestValueAccessor<Character>(Character.class);
+		StaticValueAccessor<Character> accessor2 = new StaticValueAccessor<Character>(Character.valueOf('c'), Character.class);
+		TestValueAccessor<Character> accessor3 = new TestValueAccessor<Character>(Character.class);
+		type.setKeyValueManipulator(accessor1);
+		BasicColumnAccessor<Character, Character> columnAccessor =
+				new BasicColumnAccessor<Character, Character>(accessor2, accessor3, new HardCodedValueAccessor<Integer>(TimeToLive.NONE));
+		type.setColumnAccessors(Sets.<ColumnAccessor<?,?>>newHashSet(columnAccessor));
+		testObj.setupClass(type);
+		assertSame(CharSerializer.get(), accessor1.getSessionFactoryData());
+		assertSame(CharSerializer.get(), accessor2.getSessionFactoryData());
+		assertSame(CharSerializer.get(), accessor3.getSessionFactoryData());
+	}
+	
 	@Test
 	public void testPrimitiveLongSerializationRegistration() {
 		RowMapperMetaData<Object> type = new RowMapperMetaData<Object>(Object.class);
