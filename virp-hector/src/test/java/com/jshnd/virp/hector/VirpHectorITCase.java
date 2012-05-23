@@ -91,6 +91,7 @@ public class VirpHectorITCase {
 		HectorSessionFactory actionFactory = new HectorSessionFactory();
 		actionFactory.setKeyspace(testKeyspace);
 		config.setSessionFactory(actionFactory);
+		config.setDefaultSessionAttachmentMode(SessionAttachmentMode.AUTO_FLUSH);
 		config.init();
 	}
 
@@ -194,6 +195,8 @@ public class VirpHectorITCase {
 
 		verifyBasicSaveObject("save", "valueForColumnOne", "valueForColumnTwo", Long.valueOf(20));
 	}
+	
+	
 
 	private void verifyBasicSaveObject(String key, String columnOne, String columnTwo, Long col10) {
 		Serializer<String> stringSerializer = StringSerializer.get();
@@ -247,25 +250,38 @@ public class VirpHectorITCase {
 		
 		session.close();
 	}
-
 	
 	@Test
-	public void testBasicRead() {
+	public void testBasicReadSessionAttachmentModeNone() {
+		testBasicRead(SessionAttachmentMode.MANUAL_FLUSH);
+	}
+	
+	@Test
+	public void testBasicReadAutoFlush() {
+		testBasicRead(SessionAttachmentMode.AUTO_FLUSH);
+	}
+	
+	@Test
+	public void testBasicReadManualFlush() {
+		testBasicRead(SessionAttachmentMode.MANUAL_FLUSH);
+	}
+
+	private void testBasicRead(SessionAttachmentMode flushMode) {
 		Mutator<String> mutator = HFactory.createMutator(testKeyspace, StringSerializer.get());
 		createBasicTestObject(mutator, "read", "foo", "bar", Long.valueOf(21));
 		mutator.execute();
 
-		VirpSession session = config.newSession();
+		VirpSession session = config.newSession(flushMode);
 		BasicSaveObject res = session.get(BasicSaveObject.class, "read");
 		assertNotNull(res);
-		assertEquals("read", res.key);
-		assertEquals("foo", res.columnOne);
-		assertEquals("bar", res.columnTwo);
-		assertEquals(21, res.columnTen);
+		assertEquals("read", res.getKey());
+		assertEquals("foo", res.getColumnOne());
+		assertEquals("bar", res.getColumnTwo());
+		assertEquals(21, res.getColumnTen());
 
 		session.close();
 	}
-
+	
 	@Test
 	public void testChanges() {
 		Mutator<String> mutator = HFactory.createMutator(testKeyspace, StringSerializer.get());
@@ -317,10 +333,10 @@ public class VirpHectorITCase {
 
 		BasicSaveObject res = session.get(BasicSaveObject.class, "kindaSomethingToSeeHere");
 		assertNotNull(res);
-		assertEquals("kindaSomethingToSeeHere", res.key);
-		assertNull(res.columnOne);
-		assertNull(res.columnTwo);
-		assertEquals(0, res.columnTen);
+		assertEquals("kindaSomethingToSeeHere", res.getKey());
+		assertNull(res.getColumnOne());
+		assertNull(res.getColumnTwo());
+		assertEquals(0, res.getColumnTen());
 
 		session.close();
 	}
@@ -338,18 +354,18 @@ public class VirpHectorITCase {
 		boolean aHit = false;
 		boolean bHit = false;
 		for(BasicSaveObject object : result) {
-			if("multipleA".equals(object.key)) {
+			if("multipleA".equals(object.getKey())) {
 				aHit = true;
-				assertEquals("one", object.columnOne);
-				assertEquals("two", object.columnTwo);
-				assertEquals(Long.valueOf(22), Long.valueOf(object.columnTen));
-			} else if("multipleB".equals(object.key)) {
+				assertEquals("one", object.getColumnOne());
+				assertEquals("two", object.getColumnTwo());
+				assertEquals(Long.valueOf(22), Long.valueOf(object.getColumnTen()));
+			} else if("multipleB".equals(object.getKey())) {
 				bHit = true;
-				assertEquals("three", object.columnOne);
-				assertEquals("four", object.columnTwo);
-				assertEquals(Long.valueOf(23), Long.valueOf(object.columnTen));
+				assertEquals("three", object.getColumnOne());
+				assertEquals("four", object.getColumnTwo());
+				assertEquals(Long.valueOf(23), Long.valueOf(object.getColumnTen()));
 			} else {
-				fail("Unexpected key: "  + object.key);
+				fail("Unexpected key: "  + object.getKey());
 			}
 		}
 		assertTrue(aHit);
@@ -437,18 +453,18 @@ public class VirpHectorITCase {
 		boolean eHit = false;
 		boolean fHit = false;
 		for(BasicSaveObject object : result) {
-			if("multipleE".equals(object.key)) {
+			if("multipleE".equals(object.getKey())) {
 				eHit = true;
-				assertEquals("one", object.columnOne);
-				assertEquals("two", object.columnTwo);
-				assertEquals(Long.valueOf(22), Long.valueOf(object.columnTen));
-			} else if("multipleF".equals(object.key)) {
+				assertEquals("one", object.getColumnOne());
+				assertEquals("two", object.getColumnTwo());
+				assertEquals(Long.valueOf(22), Long.valueOf(object.getColumnTen()));
+			} else if("multipleF".equals(object.getKey())) {
 				fHit = true;
-				assertNull(object.columnOne);
-				assertNull(object.columnTwo);
-				assertEquals(Long.valueOf(0), Long.valueOf(object.columnTen));
+				assertNull(object.getColumnOne());
+				assertNull(object.getColumnTwo());
+				assertEquals(Long.valueOf(0), Long.valueOf(object.getColumnTen()));
 			} else {
-				fail("Unexpected key: "  + object.key);
+				fail("Unexpected key: "  + object.getKey());
 			}
 		}
 		assertTrue(eHit);
@@ -468,10 +484,10 @@ public class VirpHectorITCase {
 
 		BasicSaveObject object = result.get(0);
 
-		assertEquals("multipleG", object.key);
-		assertEquals("one", object.columnOne);
-		assertEquals("two", object.columnTwo);
-		assertEquals(Long.valueOf(22), Long.valueOf(object.columnTen));
+		assertEquals("multipleG", object.getKey());
+		assertEquals("one", object.getColumnOne());
+		assertEquals("two", object.getColumnTwo());
+		assertEquals(Long.valueOf(22), Long.valueOf(object.getColumnTen()));
 	}
 
 	private void createIndexedObject(Mutator<String> mutator, String key, String indexed, Long unindexed) {
