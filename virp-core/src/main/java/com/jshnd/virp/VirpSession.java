@@ -28,6 +28,7 @@ import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
 
+import com.jshnd.virp.config.NullColumnSaveBehavior;
 import com.jshnd.virp.config.RowMapperMetaData;
 import com.jshnd.virp.config.SessionAttachmentMode;
 import com.jshnd.virp.exception.VirpOperationException;
@@ -40,6 +41,8 @@ public abstract class VirpSession {
 
 	private SessionAttachmentMode attachmentMode;
 
+	private NullColumnSaveBehavior nullBehavior;
+	
 	private boolean open = true;
 
 	private class SessionProxy<T> implements MethodInterceptor, VirpProxy<T> {
@@ -99,9 +102,10 @@ public abstract class VirpSession {
 		}
 	}
 
-	public VirpSession(VirpConfig config, SessionAttachmentMode attachmentMode) {
+	public VirpSession(VirpConfig config, SessionAttachmentMode attachmentMode, NullColumnSaveBehavior nullBehavior) {
 		this.config = config;
 		this.attachmentMode = attachmentMode;
+		this.nullBehavior = nullBehavior;
 	}
 
 	public <T> void save(T row) {
@@ -230,6 +234,10 @@ public abstract class VirpSession {
 
 	public SessionAttachmentMode getAttachmentMode() {
 		return attachmentMode;
+	}
+
+	public NullColumnSaveBehavior getNullBehavior() {
+		return nullBehavior;
 	}
 
 	protected abstract <T> void doSave(RowMapperMetaData<T> type, T row);

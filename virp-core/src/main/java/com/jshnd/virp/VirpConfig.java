@@ -16,6 +16,7 @@
 
 package com.jshnd.virp;
 
+import com.jshnd.virp.config.NullColumnSaveBehavior;
 import com.jshnd.virp.config.RowMapperMetaData;
 import com.jshnd.virp.config.RowMapperMetaDataReader;
 import com.jshnd.virp.config.RowMapperSource;
@@ -41,26 +42,36 @@ public class VirpConfig {
 
 	private VirpSessionFactory sessionFactory;
 
-	private Map<Class<?>, RowMapperMetaData> configuredClasses;
+	private Map<Class<?>, RowMapperMetaData<?>> configuredClasses;
 
 	private boolean noColumnsEqualsNullRow = false;
 
 	private SessionAttachmentMode defaultSessionAttachmentMode = SessionAttachmentMode.NONE;
 
+	private NullColumnSaveBehavior defaultNullColumnSaveBehavior = NullColumnSaveBehavior.NO_COLUMN;
+	
 	public VirpSession newSession() {
 		return newSession(defaultSessionAttachmentMode);
 	}
 
 	public VirpSession newSession(SessionAttachmentMode attachmentMode) {
+		return newSession(attachmentMode, defaultNullColumnSaveBehavior);
+	}
+	
+	public VirpSession newSession(NullColumnSaveBehavior nullBehavior) {
+		return newSession(defaultSessionAttachmentMode, nullBehavior);
+	}
+
+	public VirpSession newSession(SessionAttachmentMode attachmentMode, NullColumnSaveBehavior nullBehavior) {
 		if(!initialized) {
 			throw new VirpException("Session has not been initialized - call init() first.");
 		}
-		return sessionFactory.newSession(this, attachmentMode);
+		return sessionFactory.newSession(this, attachmentMode, nullBehavior);
 	}
-
+	
 	public synchronized void init() {
 		sanityChecks();
-		Map<Class<?>, RowMapperMetaData> workingMap = new HashMap<Class<?>, RowMapperMetaData>();
+		Map<Class<?>, RowMapperMetaData<?>> workingMap = new HashMap<Class<?>, RowMapperMetaData<?>>();
 		Collection<Class<?>> rowMapperClasses = rowMapperSource.getRowMapperClasses();
 		log.info("Found " + rowMapperClasses.size() + " mapping classes");
 		for (Class<?> c : rowMapperClasses) {
@@ -70,8 +81,9 @@ public class VirpConfig {
 		initialized = true;
 	}
 
+	@SuppressWarnings("unchecked")
 	protected <T> RowMapperMetaData<T> getMetaData(Class<T> type) {
-		return configuredClasses.get(type);
+		return (RowMapperMetaData<T>) configuredClasses.get(type);
 	}
 
 	private void sanityChecks() {
@@ -89,7 +101,7 @@ public class VirpConfig {
 		}
 	}
 
-	private void configureClass(Class<?> clazz, Map<Class<?>, RowMapperMetaData> workingMap) {
+	private void configureClass(Class<?> clazz, Map<Class<?>, RowMapperMetaData<?>> workingMap) {
 		log.info("Configuring rowmapper class " + clazz);
 		RowMapperMetaData<?> meta = metaDataReader.readClass(clazz);
 		sessionFactory.setupClass(meta);
@@ -116,6 +128,22 @@ public class VirpConfig {
 		this.noColumnsEqualsNullRow = noColumnsEqualsNullRow;
 	}
 
+	public NullColumnSaveBehavior getNullColumnSaveBehavior() {
+		return defaultNullColumnSaveBehavior;
+	}
+
+	/**
+	 * Controls how rows are saved when dealing with a null value. Defaults to
+	 * {@link NullColumnSaveBehavior#NO_COLUMN}.
+	 * 
+	 * @param nullColumnSaveBehavior
+	 *            The behavior to use when persisting a row with a column
+	 *            definition that has a null value
+	 */
+	public void setNullColumnSaveBehavior(NullColumnSaveBehavior nullColumnSaveBehavior) {
+		this.defaultNullColumnSaveBehavior = nullColumnSaveBehavior;
+	}
+
 	public SessionAttachmentMode getDefaultSessionAttachmentMode() {
 		return defaultSessionAttachmentMode;
 	}
@@ -124,7 +152,7 @@ public class VirpConfig {
 		this.defaultSessionAttachmentMode = defaultSessionAttachmentMode;
 	}
 
-	protected Map<Class<?>, RowMapperMetaData> getConfiguredClasses() {
+	protected Map<Class<?>, RowMapperMetaData<?>> getConfiguredClasses() {
 		return configuredClasses;
 	}
 

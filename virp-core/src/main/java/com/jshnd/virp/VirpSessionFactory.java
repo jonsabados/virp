@@ -16,12 +16,15 @@
 
 package com.jshnd.virp;
 
+import com.jshnd.virp.config.NullColumnSaveBehavior;
 import com.jshnd.virp.config.RowMapperMetaData;
 import com.jshnd.virp.config.SessionAttachmentMode;
 
 public interface VirpSessionFactory {
 
-	public VirpSession newSession(VirpConfig config, SessionAttachmentMode attachmentMode);
+	public VirpSession newSession(VirpConfig config,
+			SessionAttachmentMode attachmentMode,
+			NullColumnSaveBehavior nullBehavior);
 
 	public void setupClass(RowMapperMetaData<?> type);
 

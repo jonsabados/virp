@@ -66,7 +66,7 @@ public class VirpConfigTest {
 		replay(rowMapperSource, metaReader, sessionFactory);
 
 		testObj.init();
-		Map<Class<?>, RowMapperMetaData> result = testObj.getConfiguredClasses();
+		Map<Class<?>, RowMapperMetaData<?>> result = testObj.getConfiguredClasses();
 
 		assertEquals(2, result.size());
 		assertEquals(one, result.get(MappedSubclass.class));

@@ -20,6 +20,7 @@ import com.jshnd.virp.ColumnAccessor;
 import com.jshnd.virp.SessionFactoryDataHolder;
 import com.jshnd.virp.VirpConfig;
 import com.jshnd.virp.VirpSessionFactory;
+import com.jshnd.virp.config.NullColumnSaveBehavior;
 import com.jshnd.virp.config.RowMapperMetaData;
 import com.jshnd.virp.config.SessionAttachmentMode;
 import me.prettyprint.cassandra.serializers.*;
@@ -30,9 +31,9 @@ public class HectorSessionFactory implements VirpSessionFactory {
 	private Keyspace keyspace;
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public HectorSession newSession(VirpConfig config, SessionAttachmentMode attachmentMode) {
-		return new HectorSession(config, attachmentMode, keyspace);
+	public HectorSession newSession(VirpConfig config, SessionAttachmentMode attachmentMode, 
+				NullColumnSaveBehavior nullBehavior) {
+		return new HectorSession(config, keyspace, attachmentMode, nullBehavior);
 	}
 
 	@Override

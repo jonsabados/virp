@@ -18,6 +18,7 @@ package com.jshnd.virp.hector;
 
 import com.jshnd.virp.*;
 import com.jshnd.virp.annotation.TimeToLive;
+import com.jshnd.virp.config.NullColumnSaveBehavior;
 import com.jshnd.virp.config.RowMapperMetaData;
 import com.jshnd.virp.config.SessionAttachmentMode;
 import com.jshnd.virp.exception.VirpException;
@@ -51,8 +52,9 @@ public class HectorSession extends VirpSession {
 
 	private Keyspace keyspace;
 
-	public HectorSession(VirpConfig config, SessionAttachmentMode attachmentMode, Keyspace keyspace) {
-		super(config, attachmentMode);
+	public HectorSession(VirpConfig config, Keyspace keyspace, 
+			SessionAttachmentMode attachmentMode, NullColumnSaveBehavior nullBehavior) {
+		super(config, attachmentMode, nullBehavior);
 		this.keyspace = keyspace;
 		this.mutator = HFactory.createMutator(keyspace, BytesArraySerializer.get());
 	}
@@ -79,20 +81,50 @@ public class HectorSession extends VirpSession {
 	private <T> void addColumns(RowMapperMetaData<T> type, T row, Set<ColumnAccessor<?, ?>> accessors) {
 		String columnFamily = type.getColumnFamily();
 		ValueAccessor<?> keyAccessor = type.getKeyValueManipulator();
+		@SuppressWarnings("unchecked")
 		Serializer<Object> keySerializer = (Serializer<Object>) keyAccessor.getSessionFactoryData();
 		byte[] key = keySerializer.toBytes(keyAccessor.getValue(row));
 		for(ColumnAccessor<?, ?> accessor : accessors) {
 			StaticValueAccessor<?> identifier = accessor.getColumnIdentifier();
-			ValueAccessor<?> value = accessor.getValueManipulator();
-			HColumn<?, ?> hcolumn = HFactory.createColumn(identifier.getValue(), value.getValue(row),
-					(Serializer<Object>) identifier.getSessionFactoryData(), 
-					(Serializer<Object>) value.getSessionFactoryData());
-			int ttl = accessor.getTimeToLive().getValue(row).intValue();
-			if(ttl != TimeToLive.NONE) {
-				hcolumn.setTtl(ttl);
+			ValueAccessor<?> valueAccessor = accessor.getValueManipulator();
+			Object value  = valueAccessor.getValue(row);
+			if(value == null) {
+				switch(getNullBehavior()) {
+					case DO_NOTHING:
+						break;
+					case EMPTY_BYTE_ARRAY:
+						addColumn(row, columnFamily, key, accessor, identifier, new byte[0], 
+								BytesArraySerializer.get());
+						break;
+					case NO_COLUMN:
+					@SuppressWarnings("unchecked")
+					Serializer<Object> identifierSerializer = (Serializer<Object>) identifier
+							.getSessionFactoryData();
+					mutator.addDeletion(key, columnFamily,
+							identifier.getValue(), identifierSerializer);
+					break;
+				default:
+						throw new IllegalStateException("Please implement the new behavior.");
+				}
+			} else {
+				@SuppressWarnings("unchecked")
+				Serializer<Object> valueSerializer = (Serializer<Object>) valueAccessor.getSessionFactoryData();
+				addColumn(row, columnFamily, key, accessor, identifier, value, valueSerializer);
 			}
-			mutator.addInsertion(key, columnFamily, hcolumn);
 		}
+	}
+
+	private <T, V> void addColumn(T row, String columnFamily, byte[] key,
+								ColumnAccessor<?, ?> accessor, StaticValueAccessor<?> identifier,
+								V value, Serializer<V> valueSerializer) {
+		@SuppressWarnings("unchecked")
+		HColumn<?, ?> hcolumn = HFactory.createColumn(identifier.getValue(), value,
+				(Serializer<Object>) identifier.getSessionFactoryData(), valueSerializer);
+		int ttl = accessor.getTimeToLive().getValue(row).intValue();
+		if(ttl != TimeToLive.NONE) {
+			hcolumn.setTtl(ttl);
+		}
+		mutator.addInsertion(key, columnFamily, hcolumn);
 	}
 
 	@Override

@@ -5,6 +5,7 @@ import com.jshnd.virp.VirpConfig;
 import com.jshnd.virp.VirpSession;
 import com.jshnd.virp.annotation.*;
 import com.jshnd.virp.config.ConfiguredRowMapperSource;
+import com.jshnd.virp.config.NullColumnSaveBehavior;
 import com.jshnd.virp.config.SessionAttachmentMode;
 import com.jshnd.virp.query.Query;
 import me.prettyprint.cassandra.model.BasicColumnDefinition;
@@ -146,7 +147,7 @@ public class VirpHectorITCase {
 		private String columnTwo;
 
 		@NumberedColumnLong(number = 10)
-		private long columnTen;
+		private Long columnTen = Long.valueOf(0);
 
 		public String getKey() {
 			return key;
@@ -172,11 +173,11 @@ public class VirpHectorITCase {
 			this.columnTwo = columnTwo;
 		}
 
-		public long getColumnTen() {
+		public Long getColumnTen() {
 			return columnTen;
 		}
 
-		public void setColumnTen(long columnTen) {
+		public void setColumnTen(Long columnTen) {
 			this.columnTen = columnTen;
 		}
 	}
@@ -184,19 +185,57 @@ public class VirpHectorITCase {
 	@Test
 	public void testBasicSave() {
 		BasicSaveObject row = new BasicSaveObject();
-		row.key = "save";
-		row.columnOne = "valueForColumnOne";
-		row.columnTwo = "valueForColumnTwo";
-		row.columnTen = 20;
+		row.setKey("save");
+		row.setColumnOne("valueForColumnOne");
+		row.setColumnTwo("valueForColumnTwo");
+		row.setColumnTen(Long.valueOf(20));
 
 		VirpSession session = config.newSession();
 		session.save(row);
+		// should not save until flush
+		verifyBasicSaveObject("save", null, null, null);
 		session.close();
 
 		verifyBasicSaveObject("save", "valueForColumnOne", "valueForColumnTwo", Long.valueOf(20));
 	}
 	
+	@Test
+	public void testSaveWithNullColumnDoNothing() {
+		Mutator<String> mutator = HFactory.createMutator(testKeyspace, StringSerializer.get());
+		createBasicTestObject(mutator, "save", "someValue", "priorValue", Long.valueOf(21));
+		mutator.execute();
+		
+		BasicSaveObject row = new BasicSaveObject();
+		row.setKey("save");
+		row.setColumnOne("valueForColumnOne");
+		row.setColumnTwo(null);
+		row.setColumnTen(Long.valueOf(20));
+
+		VirpSession session = config.newSession(NullColumnSaveBehavior.DO_NOTHING);
+		session.save(row);
+		session.close();
+
+		verifyBasicSaveObject("save", "valueForColumnOne", "priorValue", Long.valueOf(20));
+	}
 	
+	@Test
+	public void testSaveWithWithEmptyByteArray() {
+		Mutator<String> mutator = HFactory.createMutator(testKeyspace, StringSerializer.get());
+		createBasicTestObject(mutator, "save", "someValue", "priorValue", Long.valueOf(21));
+		mutator.execute();
+		
+		BasicSaveObject row = new BasicSaveObject();
+		row.setKey("save");
+		row.setColumnOne("valueForColumnOne");
+		row.setColumnTwo(null);
+		row.setColumnTen(null);
+
+		VirpSession session = config.newSession(NullColumnSaveBehavior.EMPTY_BYTE_ARRAY);
+		session.save(row);
+		session.close();
+
+		verifyBasicSaveObject("save", "valueForColumnOne", "", null);
+	}
 
 	private void verifyBasicSaveObject(String key, String columnOne, String columnTwo, Long col10) {
 		Serializer<String> stringSerializer = StringSerializer.get();
@@ -228,7 +267,11 @@ public class VirpHectorITCase {
 		query2.setName(Long.valueOf(10));
 		QueryResult<HColumn<Long, Long>> res = query2.execute();
 		if(col10 == null) {
-			assertNull(res.get());
+			if(res.get() != null) {
+				assertNull("got value when expecting null: " + res.get().getValue(), res.get().getValue());
+			} else {
+				assertNull(res.get());
+			}
 		} else {
 			assertEquals(col10, res.get().getValue());
 		}
@@ -277,7 +320,7 @@ public class VirpHectorITCase {
 		assertEquals("read", res.getKey());
 		assertEquals("foo", res.getColumnOne());
 		assertEquals("bar", res.getColumnTwo());
-		assertEquals(21, res.getColumnTen());
+		assertEquals(Long.valueOf(21), res.getColumnTen());
 
 		session.close();
 	}
@@ -336,7 +379,7 @@ public class VirpHectorITCase {
 		assertEquals("kindaSomethingToSeeHere", res.getKey());
 		assertNull(res.getColumnOne());
 		assertNull(res.getColumnTwo());
-		assertEquals(0, res.getColumnTen());
+		assertEquals(Long.valueOf(0), res.getColumnTen());
 
 		session.close();
 	}
