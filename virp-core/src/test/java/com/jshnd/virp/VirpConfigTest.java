@@ -1,9 +1,7 @@
 package com.jshnd.virp;
 
 import com.google.common.collect.Sets;
-import com.jshnd.virp.config.RowMapperMetaData;
-import com.jshnd.virp.config.RowMapperMetaDataReader;
-import com.jshnd.virp.config.RowMapperSource;
+import com.jshnd.virp.config.*;
 import com.jshnd.virp.config.dummyclasses.mapped.SomeClass;
 import com.jshnd.virp.config.dummyclasses.mappedsubpackage.subpackage.MappedSubclass;
 import com.jshnd.virp.exception.VirpException;
@@ -18,6 +16,7 @@ import java.util.Set;
 
 import static org.easymock.EasyMock.*;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 
 public class VirpConfigTest {
 
@@ -49,6 +48,48 @@ public class VirpConfigTest {
 		expectedException.expectMessage("Session has not been initialized - call init() first.");
 
 		testObj.newSession();
+	}
+
+	@Test
+	public void testNewSessionDefaults() {
+		VirpSession session = createMock(VirpSession.class);
+		Set<Class<?>> classes = Sets.newHashSet();
+		expect(rowMapperSource.getRowMapperClasses()).andReturn(classes).once();
+		expect(sessionFactory.newSession(testObj, SessionAttachmentMode.NONE,
+				NullColumnSaveBehavior.NO_COLUMN)).andReturn(session).once();
+		replay(rowMapperSource, sessionFactory);
+		testObj.init();
+
+		assertSame(session, testObj.newSession());
+		verify(sessionFactory);
+	}
+
+	@Test
+	public void testNewSessionFlushMode() {
+		VirpSession session = createMock(VirpSession.class);
+		Set<Class<?>> classes = Sets.newHashSet();
+		expect(rowMapperSource.getRowMapperClasses()).andReturn(classes).once();
+		expect(sessionFactory.newSession(testObj, SessionAttachmentMode.MANUAL_FLUSH,
+				NullColumnSaveBehavior.NO_COLUMN)).andReturn(session).once();
+		replay(rowMapperSource, sessionFactory);
+		testObj.init();
+
+		assertSame(session, testObj.newSession(SessionAttachmentMode.MANUAL_FLUSH));
+		verify(sessionFactory);
+	}
+
+	@Test
+	public void testNewSessionNullBehavior() {
+		VirpSession session = createMock(VirpSession.class);
+		Set<Class<?>> classes = Sets.newHashSet();
+		expect(rowMapperSource.getRowMapperClasses()).andReturn(classes).once();
+		expect(sessionFactory.newSession(testObj, SessionAttachmentMode.NONE,
+				NullColumnSaveBehavior.DO_NOTHING)).andReturn(session).once();
+		replay(rowMapperSource, sessionFactory);
+		testObj.init();
+
+		assertSame(session, testObj.newSession(NullColumnSaveBehavior.DO_NOTHING));
+		verify(sessionFactory);
 	}
 
 	@Test

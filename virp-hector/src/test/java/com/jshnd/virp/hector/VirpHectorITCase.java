@@ -217,6 +217,25 @@ public class VirpHectorITCase {
 
 		verifyBasicSaveObject("save", "valueForColumnOne", "priorValue", Long.valueOf(20));
 	}
+
+	@Test
+	public void testSaveWithNullNoColumn() {
+		Mutator<String> mutator = HFactory.createMutator(testKeyspace, StringSerializer.get());
+		createBasicTestObject(mutator, "save", "someValue", "priorValue", Long.valueOf(21));
+		mutator.execute();
+
+		BasicSaveObject row = new BasicSaveObject();
+		row.setKey("save");
+		row.setColumnOne("valueForColumnOne");
+		row.setColumnTwo(null);
+		row.setColumnTen(Long.valueOf(20));
+
+		VirpSession session = config.newSession(NullColumnSaveBehavior.NO_COLUMN);
+		session.save(row);
+		session.close();
+
+		verifyBasicSaveObject("save", "valueForColumnOne", null, Long.valueOf(20));
+	}
 	
 	@Test
 	public void testSaveWithWithEmptyByteArray() {
