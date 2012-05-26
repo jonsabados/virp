@@ -28,7 +28,7 @@ package.
 VIRP's future
 -------------
 
-At some point in the future the following things are likely to be added to Virp:
+At some point in the near future the following things are likely to be added to Virp:
 
 * Support for per session consistency levels
 * Automagic ID generation

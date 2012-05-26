@@ -5,7 +5,7 @@
     <parent>
         <artifactId>virp</artifactId>
         <groupId>com.jshnd</groupId>
-        <version>0.0.2-SNAPSHOT</version>
+        <version>0.0.2a</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <name>Virp Hector</name>
@@ -53,7 +53,7 @@
         <dependency>
             <groupId>com.jshnd</groupId>
             <artifactId>virp-core</artifactId>
-            <version>0.0.2-SNAPSHOT</version>
+            <version>0.0.2a</version>
         </dependency>
         <dependency>
             <groupId>me.prettyprint</groupId>

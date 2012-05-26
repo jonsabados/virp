@@ -4,7 +4,7 @@
     <groupId>com.jshnd</groupId>
     <artifactId>virp</artifactId>
     <packaging>pom</packaging>
-    <version>0.0.2-SNAPSHOT</version>
+    <version>0.0.2a</version>
     <modules>
         <module>virp-hector</module>
         <module>virp-core</module>
