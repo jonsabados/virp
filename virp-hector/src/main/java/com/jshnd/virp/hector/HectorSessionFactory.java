@@ -26,6 +26,8 @@ import com.jshnd.virp.config.SessionAttachmentMode;
 import me.prettyprint.cassandra.serializers.*;
 import me.prettyprint.hector.api.Keyspace;
 
+import java.math.BigDecimal;
+
 public class HectorSessionFactory implements VirpSessionFactory {
 
 	private Keyspace keyspace;
@@ -66,8 +68,10 @@ public class HectorSessionFactory implements VirpSessionFactory {
 				accessor.setSessionFactoryData(FloatSerializer.get());
 			} else if (type.isAssignableFrom(Double.class)) {
 				accessor.setSessionFactoryData(DoubleSerializer.get());
-			}else if (type.isAssignableFrom(Boolean.class)) {
+			} else if (type.isAssignableFrom(Boolean.class)) {
 				accessor.setSessionFactoryData(BooleanSerializer.get());
+			} else if (type.isAssignableFrom(BigDecimal.class)) {
+				accessor.setSessionFactoryData(BigDecimalSerializer.get());
 			} else {
 				throw new VirpHectorException("Unable to deal with " + type.getCanonicalName() +
 						", serializer needs setup.");

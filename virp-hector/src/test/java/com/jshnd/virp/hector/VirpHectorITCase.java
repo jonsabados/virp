@@ -29,6 +29,7 @@ import me.prettyprint.hector.testutils.EmbeddedServerHelper;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
 
+import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
@@ -149,6 +150,9 @@ public class VirpHectorITCase {
 		@NumberedColumnLong(number = 10)
 		private Long columnTen = Long.valueOf(0);
 
+		@NamedColumn(name = "bigDecimal")
+		private BigDecimal bigDecimal;
+
 		public String getKey() {
 			return key;
 		}
@@ -180,6 +184,14 @@ public class VirpHectorITCase {
 		public void setColumnTen(Long columnTen) {
 			this.columnTen = columnTen;
 		}
+
+		public BigDecimal getBigDecimal() {
+			return bigDecimal;
+		}
+
+		public void setBigDecimal(BigDecimal bigDecimal) {
+			this.bigDecimal = bigDecimal;
+		}
 	}
 
 	@Test
@@ -189,20 +201,22 @@ public class VirpHectorITCase {
 		row.setColumnOne("valueForColumnOne");
 		row.setColumnTwo("valueForColumnTwo");
 		row.setColumnTen(Long.valueOf(20));
+		row.setBigDecimal(new BigDecimal("10.001"));
 
 		VirpSession session = config.newSession();
 		session.save(row);
 		// should not save until flush
-		verifyBasicSaveObject("save", null, null, null);
+		verifyBasicSaveObject("save", null, null, null, null);
 		session.close();
 
-		verifyBasicSaveObject("save", "valueForColumnOne", "valueForColumnTwo", Long.valueOf(20));
+		verifyBasicSaveObject("save", "valueForColumnOne", "valueForColumnTwo", Long.valueOf(20),
+				new BigDecimal("10.001"));
 	}
 	
 	@Test
 	public void testSaveWithNullColumnDoNothing() {
 		Mutator<String> mutator = HFactory.createMutator(testKeyspace, StringSerializer.get());
-		createBasicTestObject(mutator, "save", "someValue", "priorValue", Long.valueOf(21));
+		createBasicTestObject(mutator, "save", "someValue", "priorValue", Long.valueOf(21), new BigDecimal("10.00"));
 		mutator.execute();
 		
 		BasicSaveObject row = new BasicSaveObject();
@@ -215,13 +229,13 @@ public class VirpHectorITCase {
 		session.save(row);
 		session.close();
 
-		verifyBasicSaveObject("save", "valueForColumnOne", "priorValue", Long.valueOf(20));
+		verifyBasicSaveObject("save", "valueForColumnOne", "priorValue", Long.valueOf(20), new BigDecimal("10.00"));
 	}
 
 	@Test
 	public void testSaveWithNullNoColumn() {
 		Mutator<String> mutator = HFactory.createMutator(testKeyspace, StringSerializer.get());
-		createBasicTestObject(mutator, "save", "someValue", "priorValue", Long.valueOf(21));
+		createBasicTestObject(mutator, "save", "someValue", "priorValue", Long.valueOf(21), BigDecimal.ONE);
 		mutator.execute();
 
 		BasicSaveObject row = new BasicSaveObject();
@@ -234,13 +248,13 @@ public class VirpHectorITCase {
 		session.save(row);
 		session.close();
 
-		verifyBasicSaveObject("save", "valueForColumnOne", null, Long.valueOf(20));
+		verifyBasicSaveObject("save", "valueForColumnOne", null, Long.valueOf(20), null);
 	}
 	
 	@Test
 	public void testSaveWithWithEmptyByteArray() {
 		Mutator<String> mutator = HFactory.createMutator(testKeyspace, StringSerializer.get());
-		createBasicTestObject(mutator, "save", "someValue", "priorValue", Long.valueOf(21));
+		createBasicTestObject(mutator, "save", "someValue", "priorValue", Long.valueOf(21), BigDecimal.ONE);
 		mutator.execute();
 		
 		BasicSaveObject row = new BasicSaveObject();
@@ -253,16 +267,17 @@ public class VirpHectorITCase {
 		session.save(row);
 		session.close();
 
-		verifyBasicSaveObject("save", "valueForColumnOne", "", null);
+		verifyBasicSaveObject("save", "valueForColumnOne", "", null, null);
 	}
 
-	private void verifyBasicSaveObject(String key, String columnOne, String columnTwo, Long col10) {
+	private void verifyBasicSaveObject(String key, String columnOne, String columnTwo,
+									   Long col10, BigDecimal bigDecimal) {
 		Serializer<String> stringSerializer = StringSerializer.get();
 		SliceQuery<String, String, String> query =
 				HFactory.createSliceQuery(testKeyspace, stringSerializer, stringSerializer, stringSerializer);
 		query.setColumnFamily("BasicTestObject");
 		query.setKey(key);
-		query.setColumnNames("columnOne", "columnTwo");
+		query.setColumnNames("columnOne", "columnTwo", "bigDecimal");
 		QueryResult<ColumnSlice<String, String>> result = query.execute();
 		HColumn<String, String> one = result.get().getColumnByName("columnOne");
 		if(columnOne == null) {
@@ -294,21 +309,38 @@ public class VirpHectorITCase {
 		} else {
 			assertEquals(col10, res.get().getValue());
 		}
+
+		Serializer<BigDecimal> bigDSerializer = BigDecimalSerializer.get();
+		ColumnQuery<String, String, BigDecimal> query3 =
+				HFactory.createColumnQuery(testKeyspace, stringSerializer, stringSerializer, bigDSerializer);
+		query3.setColumnFamily("BasicTestObject");
+		query3.setKey(key);
+		query3.setName("bigDecimal");
+		QueryResult<HColumn<String, BigDecimal>> res3 = query3.execute();
+		if(bigDecimal == null) {
+			if(res3.get() != null) {
+				assertNull("got value when expecting null: " + res3.get().getValue(), res3.get().getValue());
+			} else {
+				assertNull(res3.get());
+			}
+		} else {
+			assertEquals(bigDecimal, res3.get().getValue());
+		}
 	}
 
 	@Test
 	public void testDelete() throws Exception {
 		Mutator<String> mutator = HFactory.createMutator(testKeyspace, StringSerializer.get());
-		createBasicTestObject(mutator, "delete", "foo", "bar", Long.valueOf(21));
+		createBasicTestObject(mutator, "delete", "foo", "bar", Long.valueOf(21), BigDecimal.TEN);
 		mutator.execute();
 
 		VirpSession session = config.newSession(SessionAttachmentMode.MANUAL_FLUSH);
 		BasicSaveObject res = session.get(BasicSaveObject.class, "delete");
 		session.delete(res);
 		// should not delete until flush
-		verifyBasicSaveObject("delete", "foo", "bar", Long.valueOf(21));
+		verifyBasicSaveObject("delete", "foo", "bar", Long.valueOf(21), BigDecimal.TEN);
 		session.flush();
-		verifyBasicSaveObject("delete", null, null, null);
+		verifyBasicSaveObject("delete", null, null, null, null);
 		
 		session.close();
 	}
@@ -330,7 +362,7 @@ public class VirpHectorITCase {
 
 	private void testBasicRead(SessionAttachmentMode flushMode) {
 		Mutator<String> mutator = HFactory.createMutator(testKeyspace, StringSerializer.get());
-		createBasicTestObject(mutator, "read", "foo", "bar", Long.valueOf(21));
+		createBasicTestObject(mutator, "read", "foo", "bar", Long.valueOf(21), BigDecimal.ONE);
 		mutator.execute();
 
 		VirpSession session = config.newSession(flushMode);
@@ -340,6 +372,7 @@ public class VirpHectorITCase {
 		assertEquals("foo", res.getColumnOne());
 		assertEquals("bar", res.getColumnTwo());
 		assertEquals(Long.valueOf(21), res.getColumnTen());
+		assertEquals(BigDecimal.ONE, res.getBigDecimal());
 
 		session.close();
 	}
@@ -347,7 +380,7 @@ public class VirpHectorITCase {
 	@Test
 	public void testChanges() {
 		Mutator<String> mutator = HFactory.createMutator(testKeyspace, StringSerializer.get());
-		createBasicTestObject(mutator, "changes", "of", "ta", Long.valueOf(21));
+		createBasicTestObject(mutator, "changes", "of", "ta", Long.valueOf(21), BigDecimal.ONE);
 		mutator.execute();
 
 		VirpSession session = config.newSession(SessionAttachmentMode.AUTO_FLUSH);
@@ -406,8 +439,8 @@ public class VirpHectorITCase {
 	@Test
 	public void testGetMultiple() {
 		Mutator<String> mutator = HFactory.createMutator(testKeyspace, StringSerializer.get());
-		createBasicTestObject(mutator, "multipleA", "one", "two", Long.valueOf(22));
-		createBasicTestObject(mutator, "multipleB", "three", "four", Long.valueOf(23));
+		createBasicTestObject(mutator, "multipleA", "one", "two", Long.valueOf(22), BigDecimal.TEN);
+		createBasicTestObject(mutator, "multipleB", "three", "four", Long.valueOf(23), BigDecimal.ONE);
 		mutator.execute();
 
 		VirpSession session = config.newSession();
@@ -421,11 +454,13 @@ public class VirpHectorITCase {
 				assertEquals("one", object.getColumnOne());
 				assertEquals("two", object.getColumnTwo());
 				assertEquals(Long.valueOf(22), Long.valueOf(object.getColumnTen()));
+				assertEquals(BigDecimal.TEN, object.getBigDecimal());
 			} else if("multipleB".equals(object.getKey())) {
 				bHit = true;
 				assertEquals("three", object.getColumnOne());
 				assertEquals("four", object.getColumnTwo());
 				assertEquals(Long.valueOf(23), Long.valueOf(object.getColumnTen()));
+				assertEquals(BigDecimal.ONE, object.getBigDecimal());
 			} else {
 				fail("Unexpected key: "  + object.getKey());
 			}
@@ -437,8 +472,8 @@ public class VirpHectorITCase {
 	@Test
 	public void testGetMultipleMap() {
 		Mutator<String> mutator = HFactory.createMutator(testKeyspace, StringSerializer.get());
-		createBasicTestObject(mutator, "multipleC", "one", "two", Long.valueOf(22));
-		createBasicTestObject(mutator, "multipleD", "three", "four", Long.valueOf(23));
+		createBasicTestObject(mutator, "multipleC", "one", "two", Long.valueOf(22), BigDecimal.ZERO);
+		createBasicTestObject(mutator, "multipleD", "three", "four", Long.valueOf(23), BigDecimal.ZERO);
 		mutator.execute();
 
 		VirpSession session = config.newSession();
@@ -451,12 +486,14 @@ public class VirpHectorITCase {
 		assertEquals("one", object.columnOne);
 		assertEquals("two", object.columnTwo);
 		assertEquals(Long.valueOf(22), Long.valueOf(object.columnTen));
+		assertEquals(BigDecimal.ZERO, object.getBigDecimal());
 
 		object = result.get("multipleD");
 		assertEquals("multipleD", object.key);
 		assertEquals("three", object.columnOne);
 		assertEquals("four", object.columnTwo);
 		assertEquals(Long.valueOf(23), Long.valueOf(object.columnTen));
+		assertEquals(BigDecimal.ZERO, object.getBigDecimal());
 	}
 
 	@Test
@@ -506,7 +543,7 @@ public class VirpHectorITCase {
 	public void testGetMultipleNotNullConfig() {
 		config.setNoColumnsEqualsNullRow(false);
 		Mutator<String> mutator = HFactory.createMutator(testKeyspace, StringSerializer.get());
-		createBasicTestObject(mutator, "multipleE", "one", "two", Long.valueOf(22));
+		createBasicTestObject(mutator, "multipleE", "one", "two", Long.valueOf(22), BigDecimal.ZERO);
 		mutator.execute();
 
 		VirpSession session = config.newSession();
@@ -520,11 +557,13 @@ public class VirpHectorITCase {
 				assertEquals("one", object.getColumnOne());
 				assertEquals("two", object.getColumnTwo());
 				assertEquals(Long.valueOf(22), Long.valueOf(object.getColumnTen()));
+				assertEquals(BigDecimal.ZERO, object.getBigDecimal());
 			} else if("multipleF".equals(object.getKey())) {
 				fHit = true;
 				assertNull(object.getColumnOne());
 				assertNull(object.getColumnTwo());
 				assertEquals(Long.valueOf(0), Long.valueOf(object.getColumnTen()));
+				assertNull(object.getBigDecimal());
 			} else {
 				fail("Unexpected key: "  + object.getKey());
 			}
@@ -537,7 +576,7 @@ public class VirpHectorITCase {
 	public void testGetMultipleNullConfig() {
 		config.setNoColumnsEqualsNullRow(true);
 		Mutator<String> mutator = HFactory.createMutator(testKeyspace, StringSerializer.get());
-		createBasicTestObject(mutator, "multipleG", "one", "two", Long.valueOf(22));
+		createBasicTestObject(mutator, "multipleG", "one", "two", Long.valueOf(22), BigDecimal.ZERO);
 		mutator.execute();
 
 		VirpSession session = config.newSession();
@@ -549,6 +588,7 @@ public class VirpHectorITCase {
 		assertEquals("multipleG", object.getKey());
 		assertEquals("one", object.getColumnOne());
 		assertEquals("two", object.getColumnTwo());
+		assertEquals(BigDecimal.ZERO, object.getBigDecimal());
 		assertEquals(Long.valueOf(22), Long.valueOf(object.getColumnTen()));
 	}
 
@@ -562,15 +602,18 @@ public class VirpHectorITCase {
 	}
 
 	private void createBasicTestObject(Mutator<String> mutator, String key, String columnOne, String columnTwo,
-									   Long columnTen) {
+									   Long columnTen, BigDecimal bigDecimal) {
 		Serializer<String> stringSerializer = StringSerializer.get();
 		Serializer<Long> longSerializer = LongSerializer.get();
+		Serializer<BigDecimal> decimalSerializer = BigDecimalSerializer.get();
 		mutator.addInsertion(key, "BasicTestObject",
 				HFactory.createColumn("columnOne", columnOne, 20, stringSerializer, stringSerializer));
 		mutator.addInsertion(key, "BasicTestObject",
 				HFactory.createColumn("columnTwo", columnTwo, stringSerializer, stringSerializer));
 		mutator.addInsertion(key, "BasicTestObject",
 				HFactory.createColumn(Long.valueOf(10), columnTen, longSerializer, longSerializer));
+		mutator.addInsertion(key, "BasicTestObject",
+				HFactory.createColumn("bigDecimal", bigDecimal, stringSerializer, decimalSerializer));
 	}
 
 }
