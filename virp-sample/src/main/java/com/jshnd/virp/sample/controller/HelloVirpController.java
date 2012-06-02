@@ -1,5 +1,6 @@
 package com.jshnd.virp.sample.controller;
 
+import com.jshnd.virp.VirpSessionSpec;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -33,7 +34,8 @@ public class HelloVirpController {
 		// since were not going to be doing anything fancy with the user we grab there's no
 		// reason to make it attached to the session and attachment would prevent the session
 		// from being GC'd until the HttpSession holding the webSession went away
-		VirpSession session = virpConfig.newSession(SessionAttachmentMode.NONE);
+		VirpSessionSpec spec = new VirpSessionSpec(virpConfig).withSessionAttachmentMode(SessionAttachmentMode.NONE);
+		VirpSession session = virpConfig.newSession(spec);
 		try {
 			VirpUser attached = session.get(VirpUser.class, input.getEmail());
 			if(attached != null) {
