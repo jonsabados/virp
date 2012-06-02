@@ -16,32 +16,23 @@
 
 package com.jshnd.virp;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import com.jshnd.virp.config.RowMapperMetaData;
+import com.jshnd.virp.exception.VirpOperationException;
+import com.jshnd.virp.query.ByExampleQuery;
+import com.jshnd.virp.query.Query;
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
 
-import com.jshnd.virp.config.NullColumnSaveBehavior;
-import com.jshnd.virp.config.RowMapperMetaData;
-import com.jshnd.virp.config.SessionAttachmentMode;
-import com.jshnd.virp.exception.VirpOperationException;
-import com.jshnd.virp.query.ByExampleQuery;
-import com.jshnd.virp.query.Query;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.*;
 
 public abstract class VirpSession {
 
 	protected VirpConfig config;
 
-	private SessionAttachmentMode attachmentMode;
-
-	private NullColumnSaveBehavior nullBehavior;
+	protected VirpSessionSpec sessionSpec;
 	
 	private boolean open = true;
 
@@ -102,10 +93,9 @@ public abstract class VirpSession {
 		}
 	}
 
-	public VirpSession(VirpConfig config, SessionAttachmentMode attachmentMode, NullColumnSaveBehavior nullBehavior) {
+	public VirpSession(VirpConfig config, VirpSessionSpec sessionSpec) {
 		this.config = config;
-		this.attachmentMode = attachmentMode;
-		this.nullBehavior = nullBehavior;
+		this.sessionSpec = sessionSpec;
 	}
 
 	public <T> void save(T row) {
@@ -122,7 +112,7 @@ public abstract class VirpSession {
 		sanityCheck();
 		RowMapperMetaData<T> meta = getMetaForClass(rowClass);
 		T ret = doGet(meta, key);
-		if(attachmentMode.isAttach()) {
+		if(sessionSpec.getSessionAttachmentMode().isAttach()) {
 			ret = proxyForSession(ret, meta);
 		}
 		return ret;
@@ -150,7 +140,7 @@ public abstract class VirpSession {
 
 	private <T> List<T> listForSession(List<T> objects, RowMapperMetaData<T> meta) {
 		List<T> ret;
-		if(attachmentMode.isAttach()) {
+		if(sessionSpec.getSessionAttachmentMode().isAttach()) {
 			ret = new ArrayList<T>();
 			for(T t : objects) {
 				ret.add(proxyForSession(t, meta));
@@ -181,7 +171,7 @@ public abstract class VirpSession {
 		sanityCheck();
 		open = false;
 		doClose();
-		if(attachmentMode.isAutoFlush()) {
+		if(sessionSpec.getSessionAttachmentMode().isAutoFlush()) {
 			return flush();
 		} else {
 			return VirpActionResult.NONE;
@@ -232,12 +222,8 @@ public abstract class VirpSession {
 									new SessionProxy<T>(object, meta));
 	}
 
-	public SessionAttachmentMode getAttachmentMode() {
-		return attachmentMode;
-	}
-
-	public NullColumnSaveBehavior getNullBehavior() {
-		return nullBehavior;
+	public VirpSessionSpec getSessionSpec() {
+		return sessionSpec;
 	}
 
 	protected abstract <T> void doSave(RowMapperMetaData<T> type, T row);

@@ -3,6 +3,7 @@ package com.jshnd.virp.hector;
 import com.google.common.collect.Sets;
 import com.jshnd.virp.VirpConfig;
 import com.jshnd.virp.VirpSession;
+import com.jshnd.virp.VirpSessionSpec;
 import com.jshnd.virp.annotation.*;
 import com.jshnd.virp.config.ConfiguredRowMapperSource;
 import com.jshnd.virp.config.NullColumnSaveBehavior;
@@ -225,7 +226,9 @@ public class VirpHectorITCase {
 		row.setColumnTwo(null);
 		row.setColumnTen(Long.valueOf(20));
 
-		VirpSession session = config.newSession(NullColumnSaveBehavior.DO_NOTHING);
+		VirpSessionSpec spec =
+				new VirpSessionSpec(config).withNullColumnSaveBehavior(NullColumnSaveBehavior.DO_NOTHING);
+		VirpSession session = config.newSession(spec);
 		session.save(row);
 		session.close();
 
@@ -244,7 +247,9 @@ public class VirpHectorITCase {
 		row.setColumnTwo(null);
 		row.setColumnTen(Long.valueOf(20));
 
-		VirpSession session = config.newSession(NullColumnSaveBehavior.NO_COLUMN);
+		VirpSessionSpec spec =
+				new VirpSessionSpec(config).withNullColumnSaveBehavior(NullColumnSaveBehavior.NO_COLUMN);
+		VirpSession session = config.newSession(spec);
 		session.save(row);
 		session.close();
 
@@ -263,7 +268,9 @@ public class VirpHectorITCase {
 		row.setColumnTwo(null);
 		row.setColumnTen(null);
 
-		VirpSession session = config.newSession(NullColumnSaveBehavior.EMPTY_BYTE_ARRAY);
+		VirpSessionSpec spec =
+				new VirpSessionSpec(config).withNullColumnSaveBehavior(NullColumnSaveBehavior.EMPTY_BYTE_ARRAY);
+		VirpSession session = config.newSession(spec);
 		session.save(row);
 		session.close();
 
@@ -334,7 +341,10 @@ public class VirpHectorITCase {
 		createBasicTestObject(mutator, "delete", "foo", "bar", Long.valueOf(21), BigDecimal.TEN);
 		mutator.execute();
 
-		VirpSession session = config.newSession(SessionAttachmentMode.MANUAL_FLUSH);
+
+		VirpSessionSpec spec =
+				new VirpSessionSpec(config).withSessionAttachmentMode(SessionAttachmentMode.MANUAL_FLUSH);
+		VirpSession session = config.newSession(spec);
 		BasicSaveObject res = session.get(BasicSaveObject.class, "delete");
 		session.delete(res);
 		// should not delete until flush
@@ -365,7 +375,8 @@ public class VirpHectorITCase {
 		createBasicTestObject(mutator, "read", "foo", "bar", Long.valueOf(21), BigDecimal.ONE);
 		mutator.execute();
 
-		VirpSession session = config.newSession(flushMode);
+		VirpSessionSpec spec = new VirpSessionSpec(config).withSessionAttachmentMode(flushMode);
+		VirpSession session = config.newSession(spec);
 		BasicSaveObject res = session.get(BasicSaveObject.class, "read");
 		assertNotNull(res);
 		assertEquals("read", res.getKey());
@@ -383,7 +394,9 @@ public class VirpHectorITCase {
 		createBasicTestObject(mutator, "changes", "of", "ta", Long.valueOf(21), BigDecimal.ONE);
 		mutator.execute();
 
-		VirpSession session = config.newSession(SessionAttachmentMode.AUTO_FLUSH);
+		VirpSessionSpec spec =
+				new VirpSessionSpec(config).withSessionAttachmentMode(SessionAttachmentMode.AUTO_FLUSH);
+		VirpSession session = config.newSession(spec);
 		BasicSaveObject res = session.get(BasicSaveObject.class, "changes");
 		res.setColumnOne("itsbeenchanged");
 		res.setColumnTwo("soHasThis");
@@ -412,8 +425,8 @@ public class VirpHectorITCase {
 
 	@Test
 	public void testReadNoRecordNullConfig() {
-		config.setNoColumnsEqualsNullRow(true);
-		VirpSession session = config.newSession();
+		VirpSessionSpec spec = new VirpSessionSpec(config).withNoColumnEqualsNullRow(true);
+		VirpSession session = config.newSession(spec);
 
 		BasicSaveObject res = session.get(BasicSaveObject.class, "nothingToSeeHere");
 		assertNull(res);
@@ -423,7 +436,7 @@ public class VirpHectorITCase {
 
 	@Test
 	public void testReadNoRecordNotNullConfig() {
-		config.setNoColumnsEqualsNullRow(false);
+		VirpSessionSpec spec = new VirpSessionSpec(config).withNoColumnEqualsNullRow(false);
 		VirpSession session = config.newSession();
 
 		BasicSaveObject res = session.get(BasicSaveObject.class, "kindaSomethingToSeeHere");
@@ -541,12 +554,12 @@ public class VirpHectorITCase {
 
 	@Test
 	public void testGetMultipleNotNullConfig() {
-		config.setNoColumnsEqualsNullRow(false);
 		Mutator<String> mutator = HFactory.createMutator(testKeyspace, StringSerializer.get());
 		createBasicTestObject(mutator, "multipleE", "one", "two", Long.valueOf(22), BigDecimal.ZERO);
 		mutator.execute();
 
-		VirpSession session = config.newSession();
+		VirpSessionSpec spec = new VirpSessionSpec(config).withNoColumnEqualsNullRow(false);
+		VirpSession session = config.newSession(spec);
 		List<BasicSaveObject> result = session.get(BasicSaveObject.class, "multipleE", "multipleF");
 		assertEquals(2, result.size());
 		boolean eHit = false;
@@ -574,12 +587,12 @@ public class VirpHectorITCase {
 
 	@Test
 	public void testGetMultipleNullConfig() {
-		config.setNoColumnsEqualsNullRow(true);
 		Mutator<String> mutator = HFactory.createMutator(testKeyspace, StringSerializer.get());
 		createBasicTestObject(mutator, "multipleG", "one", "two", Long.valueOf(22), BigDecimal.ZERO);
 		mutator.execute();
 
-		VirpSession session = config.newSession();
+		VirpSessionSpec spec = new VirpSessionSpec(config).withNoColumnEqualsNullRow(true);
+		VirpSession session = config.newSession(spec);
 		List<BasicSaveObject> result = session.get(BasicSaveObject.class, "multipleG", "multipleH");
 		assertEquals(1, result.size());
 

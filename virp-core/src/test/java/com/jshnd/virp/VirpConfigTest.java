@@ -55,8 +55,9 @@ public class VirpConfigTest {
 		VirpSession session = createMock(VirpSession.class);
 		Set<Class<?>> classes = Sets.newHashSet();
 		expect(rowMapperSource.getRowMapperClasses()).andReturn(classes).once();
-		expect(sessionFactory.newSession(testObj, SessionAttachmentMode.NONE,
-				NullColumnSaveBehavior.NO_COLUMN)).andReturn(session).once();
+		VirpSessionSpec expected =
+				new VirpSessionSpec(SessionAttachmentMode.NONE, NullColumnSaveBehavior.NO_COLUMN, false);
+		expect(sessionFactory.newSession(testObj, expected)).andReturn(session).once();
 		replay(rowMapperSource, sessionFactory);
 		testObj.init();
 
@@ -68,13 +69,17 @@ public class VirpConfigTest {
 	public void testNewSessionFlushMode() {
 		VirpSession session = createMock(VirpSession.class);
 		Set<Class<?>> classes = Sets.newHashSet();
+		VirpSessionSpec expected =
+				new VirpSessionSpec(SessionAttachmentMode.MANUAL_FLUSH, NullColumnSaveBehavior.NO_COLUMN,
+						false);
 		expect(rowMapperSource.getRowMapperClasses()).andReturn(classes).once();
-		expect(sessionFactory.newSession(testObj, SessionAttachmentMode.MANUAL_FLUSH,
-				NullColumnSaveBehavior.NO_COLUMN)).andReturn(session).once();
+		expect(sessionFactory.newSession(testObj, expected)).andReturn(session).once();
 		replay(rowMapperSource, sessionFactory);
 		testObj.init();
 
-		assertSame(session, testObj.newSession(SessionAttachmentMode.MANUAL_FLUSH));
+		VirpSessionSpec spec =
+				new VirpSessionSpec(testObj).withSessionAttachmentMode(SessionAttachmentMode.MANUAL_FLUSH);
+		assertSame(session, testObj.newSession(spec));
 		verify(sessionFactory);
 	}
 
@@ -82,13 +87,16 @@ public class VirpConfigTest {
 	public void testNewSessionNullBehavior() {
 		VirpSession session = createMock(VirpSession.class);
 		Set<Class<?>> classes = Sets.newHashSet();
+		VirpSessionSpec expected =
+				new VirpSessionSpec(SessionAttachmentMode.NONE, NullColumnSaveBehavior.DO_NOTHING, false);
 		expect(rowMapperSource.getRowMapperClasses()).andReturn(classes).once();
-		expect(sessionFactory.newSession(testObj, SessionAttachmentMode.NONE,
-				NullColumnSaveBehavior.DO_NOTHING)).andReturn(session).once();
+		expect(sessionFactory.newSession(testObj, expected)).andReturn(session).once();
 		replay(rowMapperSource, sessionFactory);
 		testObj.init();
 
-		assertSame(session, testObj.newSession(NullColumnSaveBehavior.DO_NOTHING));
+		VirpSessionSpec spec =
+				new VirpSessionSpec(testObj).withNullColumnSaveBehavior(NullColumnSaveBehavior.DO_NOTHING);
+		assertSame(session, testObj.newSession(spec));
 		verify(sessionFactory);
 	}
 

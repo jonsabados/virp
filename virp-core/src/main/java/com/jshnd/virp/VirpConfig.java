@@ -16,11 +16,7 @@
 
 package com.jshnd.virp;
 
-import com.jshnd.virp.config.NullColumnSaveBehavior;
-import com.jshnd.virp.config.RowMapperMetaData;
-import com.jshnd.virp.config.RowMapperMetaDataReader;
-import com.jshnd.virp.config.RowMapperSource;
-import com.jshnd.virp.config.SessionAttachmentMode;
+import com.jshnd.virp.config.*;
 import com.jshnd.virp.exception.VirpException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,24 +47,16 @@ public class VirpConfig {
 	private NullColumnSaveBehavior defaultNullColumnSaveBehavior = NullColumnSaveBehavior.NO_COLUMN;
 	
 	public VirpSession newSession() {
-		return newSession(defaultSessionAttachmentMode);
+		return newSession(new VirpSessionSpec(this));
 	}
 
-	public VirpSession newSession(SessionAttachmentMode attachmentMode) {
-		return newSession(attachmentMode, defaultNullColumnSaveBehavior);
-	}
-	
-	public VirpSession newSession(NullColumnSaveBehavior nullBehavior) {
-		return newSession(defaultSessionAttachmentMode, nullBehavior);
-	}
-
-	public VirpSession newSession(SessionAttachmentMode attachmentMode, NullColumnSaveBehavior nullBehavior) {
+	public VirpSession newSession(VirpSessionSpec sessionSpec) {
 		if(!initialized) {
 			throw new VirpException("Session has not been initialized - call init() first.");
 		}
-		return sessionFactory.newSession(this, attachmentMode, nullBehavior);
+		return sessionFactory.newSession(this, sessionSpec);
 	}
-	
+
 	public synchronized void init() {
 		sanityChecks();
 		Map<Class<?>, RowMapperMetaData<?>> workingMap = new HashMap<Class<?>, RowMapperMetaData<?>>();
@@ -120,7 +108,7 @@ public class VirpConfig {
 		this.sessionFactory = sessionFactory;
 	}
 
-	public boolean isNoColumnsEqualsNullRow() {
+	protected boolean isNoColumnsEqualsNullRow() {
 		return noColumnsEqualsNullRow;
 	}
 
@@ -128,7 +116,7 @@ public class VirpConfig {
 		this.noColumnsEqualsNullRow = noColumnsEqualsNullRow;
 	}
 
-	public NullColumnSaveBehavior getNullColumnSaveBehavior() {
+	protected NullColumnSaveBehavior getNullColumnSaveBehavior() {
 		return defaultNullColumnSaveBehavior;
 	}
 
@@ -144,7 +132,7 @@ public class VirpConfig {
 		this.defaultNullColumnSaveBehavior = nullColumnSaveBehavior;
 	}
 
-	public SessionAttachmentMode getDefaultSessionAttachmentMode() {
+	protected SessionAttachmentMode getDefaultSessionAttachmentMode() {
 		return defaultSessionAttachmentMode;
 	}
 

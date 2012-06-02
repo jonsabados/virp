@@ -18,9 +18,7 @@ package com.jshnd.virp.hector;
 
 import com.jshnd.virp.*;
 import com.jshnd.virp.annotation.TimeToLive;
-import com.jshnd.virp.config.NullColumnSaveBehavior;
 import com.jshnd.virp.config.RowMapperMetaData;
-import com.jshnd.virp.config.SessionAttachmentMode;
 import com.jshnd.virp.exception.VirpException;
 import com.jshnd.virp.query.Query;
 import com.jshnd.virp.query.QueryParameter;
@@ -52,9 +50,8 @@ public class HectorSession extends VirpSession {
 
 	private Keyspace keyspace;
 
-	public HectorSession(VirpConfig config, Keyspace keyspace, 
-			SessionAttachmentMode attachmentMode, NullColumnSaveBehavior nullBehavior) {
-		super(config, attachmentMode, nullBehavior);
+	public HectorSession(VirpConfig config, Keyspace keyspace, VirpSessionSpec sessionSpec) {
+		super(config, sessionSpec);
 		this.keyspace = keyspace;
 		this.mutator = HFactory.createMutator(keyspace, BytesArraySerializer.get());
 	}
@@ -89,7 +86,7 @@ public class HectorSession extends VirpSession {
 			ValueAccessor<?> valueAccessor = accessor.getValueManipulator();
 			Object value  = valueAccessor.getValue(row);
 			if(value == null) {
-				switch(getNullBehavior()) {
+				switch(sessionSpec.getNullColumnSaveBehavior()) {
 					case DO_NOTHING:
 						break;
 					case EMPTY_BYTE_ARRAY:
@@ -256,7 +253,7 @@ public class HectorSession extends VirpSession {
 	}
 
 	private <T, K> T fromSlice(RowMapperMetaData<T> type, TypeBits<T, K> typeBits, ColumnSlice<byte[], byte[]> slice) {
-		if(slice.getColumns().size() == 0 && config.isNoColumnsEqualsNullRow()) {
+		if(slice.getColumns().size() == 0 && sessionSpec.isNoColumnsEqualsNullRow()) {
 			return null;
 		}
 		T ret;

@@ -7,7 +7,6 @@ import com.jshnd.virp.annotation.Key;
 import com.jshnd.virp.annotation.NamedColumn;
 import com.jshnd.virp.annotation.RowMapper;
 import com.jshnd.virp.config.ConfiguredRowMapperSource;
-import com.jshnd.virp.config.NullColumnSaveBehavior;
 import com.jshnd.virp.config.RowMapperMetaData;
 import com.jshnd.virp.config.SessionAttachmentMode;
 import com.jshnd.virp.exception.VirpOperationException;
@@ -40,7 +39,7 @@ public class VirpSessionTest {
 		private Map<Object, Set<ColumnAccessor<?, ?>>> modifications = new HashMap<Object, Set<ColumnAccessor<?, ?>>>();
 
 		TestSession(VirpConfig config, SessionAttachmentMode mode) {
-			super(config, mode, NullColumnSaveBehavior.DO_NOTHING);
+			super(config, new VirpSessionSpec(config));
 		}
 
 		@Override
