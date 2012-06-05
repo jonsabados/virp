@@ -9,6 +9,7 @@
         <module>virp-hector</module>
         <module>virp-core</module>
         <module>virp-sample</module>
+        <module>virp-jackson</module>
     </modules>
     <name>virp</name>
 

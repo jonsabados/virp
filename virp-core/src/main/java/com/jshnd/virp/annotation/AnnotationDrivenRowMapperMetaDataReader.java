@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -85,11 +86,15 @@ public class AnnotationDrivenRowMapperMetaDataReader implements RowMapperMetaDat
 		if (key != null || namedColumn != null || numberedColumns.size() > 0) {
 			Method getter = annotationUtil.getGetMethod();
 			Method setter = annotationUtil.getSetMethod();
-			ReflectionMethodValueManipulator<Object> manipulator =
+			ValueManipulator<Object> manipulator =
 					new ReflectionMethodValueManipulator<Object>(getter, setter);
 			if (key != null) {
 				enforceSingleKeyColumn(meta);
 				meta.setKeyValueManipulator(manipulator);
+			}
+			DataTransformer transformAnnotation = annotationUtil.getAnnotation(DataTransformer.class);
+			if(transformAnnotation != null) {
+				manipulator = wrapManipulator(getter, manipulator, transformAnnotation);
 			}
 			ValueAccessor<Integer> ttlGetter = getTtl(defaultTimeToLive, ttl, dynamicTtlMarker, dynamicTimeToLives);
 			if (namedColumn != null) {
@@ -100,6 +105,21 @@ public class AnnotationDrivenRowMapperMetaDataReader implements RowMapperMetaDat
 				addNumberedColumn(numberedColumn, valueAccessors, manipulator, ttlGetter);
 			}
 		}
+	}
+
+	private ValueManipulator<Object> wrapManipulator(Method getter, ValueManipulator<Object> manipulator,
+													 DataTransformer transformAnnotation) {
+		try {
+			Class<? extends Transformer> tclass = transformAnnotation.transformer();
+			Constructor constructor = tclass.getConstructor(Class.class);
+			Transformer<Object, Object> transformer =
+					(Transformer) constructor.newInstance(getter.getReturnType());
+			manipulator = new TransformingValueManipulator<Object, Object>(manipulator, transformer);
+		} catch (Exception e) {
+			throw new IllegalArgumentException(
+					"Transformers must have a single arg constructor taking the class to transform", e);
+		}
+		return manipulator;
 	}
 
 	private ValueAccessor<Integer> getTtl(TimeToLive defaultTimeToLive,
@@ -146,7 +166,7 @@ public class AnnotationDrivenRowMapperMetaDataReader implements RowMapperMetaDat
 	}
 
 	private void addNumberedColumn(Annotation annotation, Set<ColumnAccessor<?, ?>> valueAccessors,
-								   ReflectionMethodValueManipulator<Object> manipulator,
+								   ValueManipulator<Object> manipulator,
 								   ValueAccessor<Integer> ttlGetter) {
 		try {
 			NumberedColumnMarker type = annotation.annotationType().getAnnotation(NumberedColumnMarker.class);

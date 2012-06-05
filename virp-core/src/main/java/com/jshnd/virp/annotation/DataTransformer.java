@@ -14,10 +14,19 @@
  * limitations under the License.
  */
 
-package com.jshnd.virp;
+package com.jshnd.virp.annotation;
 
-public interface ValueTypeHolder<T> {
+import com.jshnd.virp.Transformer;
 
-	public Class<? extends T> getValueType();
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.FIELD, ElementType.METHOD})
+public @interface DataTransformer {
+
+	public Class<? extends Transformer> transformer();
 
 }

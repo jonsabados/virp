@@ -16,8 +16,18 @@
 
 package com.jshnd.virp;
 
-public interface ValueTypeHolder<T> {
+/**
+ * Interface for @DataTransformer annotations.
+ *
+ * @param <C>  the type that will make it into cassandra
+ * @param <O>  the type the object has
+ */
+public interface Transformer<C, O> {
 
-	public Class<? extends T> getValueType();
+	public O valueForObject(C valueInCassandra);
+
+	public C valueForCassandra(O valueInObject);
+
+	public Class<? extends C> cassandraValueClass();
 
 }
