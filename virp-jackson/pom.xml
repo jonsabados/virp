@@ -5,28 +5,66 @@
     <parent>
         <artifactId>virp</artifactId>
         <groupId>com.jshnd</groupId>
-        <version>0.0.3-SNAPSHOT</version>
+        <version>0.0.3a</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-
+    <name>Virp Jackson</name>
     <artifactId>virp-jackson</artifactId>
+    <packaging>jar</packaging>
+
+    <profiles>
+        <profile>
+            <id>jenkins</id>
+            <activation>
+                <property>
+                    <name>env.BUILD_NUMBER</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>cobertura-maven-plugin</artifactId>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>2.6</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                        <phase>test</phase>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 
     <dependencies>
         <dependency>
             <groupId>com.jshnd</groupId>
             <artifactId>virp-core</artifactId>
-            <version>0.0.3-SNAPSHOT</version>
+            <version>0.0.3a</version>
         </dependency>
         <dependency>
             <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-core-lgpl</artifactId>
+            <artifactId>jackson-mapper-asl</artifactId>
             <version>1.9.7</version>
         </dependency>
 
         <dependency>
             <groupId>com.jshnd</groupId>
             <artifactId>virp-hector</artifactId>
-            <version>0.0.3-SNAPSHOT</version>
+            <version>0.0.3a</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -35,12 +73,98 @@
             <version>1.0-4</version>
             <scope>test</scope>
         </dependency>
+
+        <!-- cassandra-all dependencies needed for tests firing up cassandra -->
         <dependency>
-            <groupId>com.github.stephenc</groupId>
-            <artifactId>jamm</artifactId>
-            <version>0.2.5</version>
+            <artifactId>concurrentlinkedhashmap-lru</artifactId>
+            <groupId>
+                com.googlecode.concurrentlinkedhashmap
+            </groupId>
+            <version>1.2</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <artifactId>commons-lang</artifactId>
+            <groupId>commons-lang</groupId>
+            <scope>test</scope>
+            <version>2.4</version>
+        </dependency>
+        <dependency>
+            <artifactId>commons-cli</artifactId>
+            <groupId>commons-cli</groupId>
+            <version>1.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <artifactId>commons-codec</artifactId>
+            <groupId>commons-codec</groupId>
+            <scope>test</scope>
+            <version>1.2</version>
+        </dependency>
+        <dependency>
+            <artifactId>compress-lzf</artifactId>
+            <groupId>com.ning</groupId>
+            <scope>test</scope>
+            <version>0.8.4</version>
+        </dependency>
+        <dependency>
+            <artifactId>snappy-java</artifactId>
+            <groupId>org.xerial.snappy</groupId>
+            <scope>test</scope>
+            <version>1.0.4.1</version>
+        </dependency>
+        <dependency>
+            <artifactId>json-simple</artifactId>
+            <groupId>com.googlecode.json-simple</groupId>
+            <scope>test</scope>
+            <version>1.1</version>
+        </dependency>
+        <dependency>
+            <artifactId>snakeyaml</artifactId>
+            <groupId>org.yaml</groupId>
+            <scope>test</scope>
+            <version>1.6</version>
+        </dependency>
+        <dependency>
+            <artifactId>jline</artifactId>
+            <groupId>jline</groupId>
+            <scope>test</scope>
+            <version>0.9.94</version>
+        </dependency>
+        <dependency>
+            <artifactId>avro</artifactId>
+            <groupId>org.apache.cassandra.deps</groupId>
+            <scope>test</scope>
+            <version>1.4.0-cassandra-1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.antlr</groupId>
+            <artifactId>antlr</artifactId>
+            <version>3.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <artifactId>log4j</artifactId>
+            <groupId>log4j</groupId>
+            <scope>test</scope>
+            <version>1.2.16</version>
+        </dependency>
+        <dependency>
+            <artifactId>high-scale-lib</artifactId>
+            <groupId>
+                com.github.stephenc.high-scale-lib
+            </groupId>
+            <scope>test</scope>
+            <version>1.1.2</version>
+        </dependency>
+        <dependency>
+            <artifactId>jamm</artifactId>
+            <groupId>com.github.stephenc</groupId>
+            <scope>test</scope>
+            <version>0.2.5</version>
+        </dependency>
+
+
     </dependencies>
 
 </project>

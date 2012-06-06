@@ -470,6 +470,34 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 	}
 
 	@RowMapper(columnFamily = "dontCare")
+	public static class BooleanColumnPropertyTester {
+
+		@Key
+		@NamedColumn(name = "foo")
+		private boolean key;
+
+		public boolean isKey() {
+			return key;
+		}
+
+		public void setKey(boolean key) {
+			this.key = key;
+		}
+	}
+
+	@Test
+	public void testBooleanProperty() {
+		RowMapperMetaData<BooleanColumnPropertyTester> meta = testObj.readClass(BooleanColumnPropertyTester.class);
+		BooleanColumnPropertyTester bean = new BooleanColumnPropertyTester();
+		bean.setKey(true);
+		assertEquals(1, meta.getColumnAccessors().size());
+		ColumnAccessor<?, ?> getter = Iterables.getFirst(meta.getColumnAccessors(), null);
+		assertEquals("foo", getter.getColumnIdentifier().getValue());
+		assertEquals(String.class, getter.getColumnIdentifier().getValueType());
+		assertEquals(Boolean.TRUE, getter.getValueManipulator().getValue(bean));
+	}
+
+	@RowMapper(columnFamily = "dontCare")
 	public static class OkMethodKeyTester {
 
 		private String key;
@@ -666,8 +694,7 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 	@Test
 	public void testMissingGetterOnMethodAnnotation() {
 		expectedException.expect(VirpAnnotationException.class);
-		expectedException.expectMessage("setter for getter getColumn not found on class "
-				+ GetterWithoutSetterMethodTester.class.getCanonicalName());
+		expectedException.expectMessage("Setter for field column not found");
 		testObj.readClass(GetterWithoutSetterMethodTester.class);
 	}
 
@@ -701,8 +728,7 @@ public class AnnotationDrivenRowMapperMetaDataReaderTest {
 	@Test
 	public void testInacessibleGetterOnMethodAnnotation() {
 		expectedException.expect(VirpAnnotationException.class);
-		expectedException.expectMessage("setter for getter getColumn not found on class "
-				+ GetterWithoutAccessibleSetterMethodTester.class.getCanonicalName());
+		expectedException.expectMessage("Setter for field column not found");
 		testObj.readClass(GetterWithoutAccessibleSetterMethodTester.class);
 	}
 

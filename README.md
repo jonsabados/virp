@@ -30,7 +30,6 @@ VIRP's future
 
 At some point in the near future the following things are likely to be added to Virp:
 
-* Support for per session consistency levels
 * Automagic ID generation
 * Lazily loading collections of other entities based on a secondary index (maybe...)
 

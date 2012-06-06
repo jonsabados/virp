@@ -30,9 +30,29 @@ class FieldAnnotationUtil implements AnnotationUtil {
 
 	private Class<?> classFor;
 
+	private Method getter;
+
+	private Method setter;
+
 	FieldAnnotationUtil(Field field, Class<?> classFor) {
 		this.field = field;
 		this.classFor = classFor;
+		String methodName = "get" + StringUtils.capitalize(field.getName());
+		try {
+			getter = classFor.getMethod(methodName);
+		} catch(NoSuchMethodException e) {
+			methodName = "is" + StringUtils.capitalize(field.getName());
+			try {
+				getter = classFor.getMethod(methodName);
+			} catch (NoSuchMethodException e2) {
+				throw new VirpAnnotationException("Getter for field " + field.getName() + " not found");
+			}
+		}
+		try {
+			setter = ReflectionUtil.getSetter(classFor, getGetMethod());
+		} catch (NoSuchMethodException e) {
+			throw new VirpAnnotationException("Setter for field " + field.getName() + " not found");
+		}
 	}
 
 	@Override
@@ -47,21 +67,12 @@ class FieldAnnotationUtil implements AnnotationUtil {
 
 	@Override
 	public Method getGetMethod() {
-		String methodName = "get" + StringUtils.capitalize(field.getName());
-		try {
-			return classFor.getMethod(methodName);
-		} catch (NoSuchMethodException e) {
-			throw new VirpAnnotationException("Getter for field " + field.getName() + " not found");
-		}
+		return  getter;
 	}
 
 	@Override
 	public Method getSetMethod() {
-		try {
-			return ReflectionUtil.getSetter(classFor, getGetMethod());
-		} catch(NoSuchMethodException e) {
-			throw new VirpAnnotationException("Setter for field " + field.getName() + " not found");
-		}
+		return  setter;
 	}
 
 	@Override
