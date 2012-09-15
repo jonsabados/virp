@@ -1,7 +1,7 @@
 VIRP (Value In Right Place)
 ===========================
 
-An ORM for [Cassandra](http://cassandra.apache.org/). Currently in in it's infancy but with basic CRUD support.
+An ORM for [Cassandra](http://cassandra.apache.org/). VIRP offers basic CRUD suppor, but was just my excuess to play with Cassandra and is no longer in active development.
 
 Features
 --------
@@ -28,11 +28,5 @@ package.
 VIRP's future
 -------------
 
-At some point in the near future the following things are likely to be added to Virp:
-
-* Automagic ID generation
-* Lazily loading collections of other entities based on a secondary index (maybe...)
-
-If there is something else you would like to see, or if you found a bug go ahead and create an
-[issue](https://github.com/jonsabados/virp/issues), or if you feel up to it fork the project, make your changes &
-send a pull request.
+Its pretty bleak - although it does do some things that the other cassandra ORM's that are out there dont do 
+(ttls), it would be more productive to add those features to an established project rather than continue maintenance.
